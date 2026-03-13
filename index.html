@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTROLE DE ESTOQUE | v7.3</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    
+    <style>
+        :root {
+            --roxo: #5a189a; --lilas: #9d4edd; --escuro: #1a132e;
+            --cinza-fundo: #f4f5f8; --cinza-borda: #d1d5db;
+            --verde: #2a9d8f; --vermelho: #e63946; --texto: #374151;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--cinza-fundo); color: var(--texto); overflow-x: hidden; }
+
+        .auth-container { max-width: 400px; margin: 40px auto; padding: 20px; text-align: center; }
+        .logo-login { width: 100%; max-width: 300px; margin-bottom: 20px; }
+        .card-auth { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--roxo); text-align: left; }
+
+        #layout-sistema { display: none; min-height: 100vh; }
+        header { background: var(--escuro); color: white; height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; }
+        header img { height: 28px; filter: brightness(0) invert(1); }
+
+        .sidebar { position: fixed; top: 65px; left: 0; bottom: 0; width: 240px; background: #22163f; padding: 20px; }
+        .nav-btn { background: transparent; border: none; color: #cbb2ff; padding: 12px; text-align: left; border-radius: 8px; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .nav-btn.active { background: var(--roxo); color: white; }
+
+        main { margin-left: 240px; margin-top: 65px; padding: 20px; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; }
+        .btn-principal { background: var(--roxo); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
+        
+        .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); position: relative; overflow: hidden; }
+        .alert-item { background: #fee2e2; border-left: 4px solid var(--vermelho); padding: 12px; margin-bottom: 8px; color: #b91c1c; border-radius: 4px; font-size: 14px; }
+        .log-row { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; padding: 10px; }
+            .nav-btn span { display: none; }
+            main { margin-left: 60px; }
+        }
+    </style>
+</head>
+<body onkeydown="app.globalEnter(event)">
+
+    <div id="section-auth" class="auth-container">
+        <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" class="logo-login">
+        <div id="card-login" class="card-auth">
+            <h3 style="margin-top:0; color:var(--roxo)">Entrar</h3>
+            <input type="text" id="login-user" placeholder="Usuário">
+            <input type="password" id="login-pass" placeholder="Senha">
+            <button class="btn-principal" onclick="app.login()">ACESSAR</button>
+            <p style="text-align:center; margin-top:15px;">
+                <a href="#" onclick="app.toggleAuth()" style="color:var(--roxo); text-decoration:none; font-size:14px; font-weight:bold">Cadastrar Colaborador</a>
+            </p>
+        </div>
+
+        <div id="card-cad" class="card-auth hidden">
+            <h3 style="margin-top:0; color:var(--roxo)">Novo Cadastro</h3>
+            <input type="text" id="cad-nome" placeholder="Nome Completo">
+            <input type="password" id="cad-pass" placeholder="Senha (8 dígitos)" maxlength="8">
+            <button class="btn-principal" onclick="app.cadastrar()">GERAR ACESSO</button>
+            <p style="text-align:center; margin-top:15px;">
+                <a href="#" onclick="app.toggleAuth()" style="color:gray; text-decoration:none; font-size:14px">Voltar ao Login</a>
+            </p>
+        </div>
+    </div>
+
+    <div id="layout-sistema">
+        <header>
+            <div style="display:flex; align-items:center; gap:10px">
+                <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg">
+                <span style="font-weight:bold">CONTROLE DE ESTOQUE</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:15px">
+                <small id="user-info" style="font-weight:600"></small>
+                <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:4px 10px; border-radius:4px; cursor:pointer">Sair</button>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <button id="nav-dash" class="nav-btn active" onclick="app.nav('dash')">🏠 <span>Início</span></button>
+            <button id="nav-est" class="nav-btn" onclick="app.nav('est')">🔍 <span>Estoque</span></button>
+            <button id="nav-ent" class="nav-btn" onclick="app.nav('ent')">📥 <span>Entrada</span></button>
+            <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')">📤 <span>Saída</span></button>
+            <button id="nav-rel" class="nav-btn" onclick="app.nav('rel')">📊 <span>Logs</span></button>
+            <button id="nav-adm" class="nav-btn hidden" onclick="app.nav('adm')">⚙️ <span>Admin</span></button>
+        </aside>
+
+        <main>
+            <div id="v-dash" class="view">
+                <h3>Vencimentos Críticos (Até 10 dias)</h3>
+                <div id="alertas-vencimento"></div>
+                <div class="card" style="text-align:center">
+                    <h1 id="count-itens" style="margin:0; color:var(--roxo)">0</h1>
+                    <p style="margin:0; color:gray">Total de Itens no Banco</p>
+                </div>
+            </div>
+
+            <div id="v-ent" class="view hidden">
+                <div class="card">
+                    <h3>Entrada de Material</h3>
+                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Câmera (Código)</button>
+                    <div id="s-ent" class="scanner-view"></div>
+                    <label>Código de Barras</label><input type="text" id="ent-cod">
+                    <label>Nome do Material</label><input type="text" id="ent-nome">
+                    <label>Validade</label><input type="date" id="ent-venc">
+                    <button class="btn-principal" onclick="app.dbSalvar()">SALVAR NA NUVEM</button>
+                </div>
+            </div>
+
+            <div id="v-sai" class="view hidden">
+                <div class="card">
+                    <h3>Confirmar Saída Definitiva</h3>
+                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear</button>
+                    <div id="s-sai" class="scanner-view"></div>
+                    <label>Código do Item</label><input type="text" id="sai-cod">
+                    <button class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">CONFIRMAR BAIXA</button>
+                </div>
+            </div>
+
+            <div id="v-est" class="view hidden">
+                <div class="card">
+                    <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="app.renderEstoque()">
+                    <table style="width:100%; border-collapse:collapse; margin-top:10px" border="1" bordercolor="#eee">
+                        <thead><tr style="background:#f9f9f9"><th>Cód</th><th>Material</th><th>Vencimento</th></tr></thead>
+                        <tbody id="lista-est" style="text-align:center"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="v-rel" class="view hidden">
+                <div class="card">
+                    <h3>Histórico de Atividades</h3>
+                    <div id="lista-logs" style="max-height:500px; overflow-y:auto"></div>
+                </div>
+            </div>
+
+            <div id="v-adm" class="view hidden">
+                <div class="card">
+                    <h3>Gestão de Equipe</h3>
+                    <div id="lista-users"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfmAU3fRhjqLpeOvED3Hb1ohQ0XKXBWpA",
+            authDomain: "iepeges.firebaseapp.com",
+            databaseURL: "https://iepeges-default-rtdb.firebaseio.com",
+            projectId: "iepeges",
+            storageBucket: "iepeges.firebasestorage.app",
+            messagingSenderId: "722436445499",
+            appId: "1:722436445499:web:e4c968164056477d44d31e"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const app = {
+            user: null,
+            viewAtiva: 'login',
+            dados: { materiais: {}, logs: {}, usuarios: {} },
+
+            init() {
+                db.ref('/').on('value', (snap) => {
+                    this.dados = snap.val() || { materiais: {}, logs: {}, usuarios: {} };
+                    this.renderEstoque();
+                    this.renderLogs();
+                    this.renderAdmin();
+                    this.checkVencimento();
+                });
+            },
+
+            // 1 - Lógica de Login (Primeira letra + Sobrenome)
+            cadastrar() {
+                const n = document.getElementById('cad-nome').value.trim();
+                const p = document.getElementById('cad-pass').value;
+                if(!n || p.length < 4) return alert("Preencha o nome e senha.");
+                
+                const partes = n.split(' ');
+                if(partes.length < 2) return alert("Por favor, digite Nome e Sobrenome.");
+                
+                const login = (partes[0][0] + partes[partes.length - 1]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user' });
+                alert("Cadastro Realizado!\nSeu login é: " + login);
+                this.toggleAuth();
+            },
+
+            login() {
+                const u = document.getElementById('login-user').value.toLowerCase();
+                const p = document.getElementById('login-pass').value;
+                
+                if(u === 'iepeges' && p === 'itc@123@') {
+                    this.user = {nome: 'MASTER', login: 'iepeges', role: 'admin'};
+                } else {
+                    const found = Object.values(this.dados.usuarios || {}).find(x => x.login === u && x.pass === p);
+                    if(found) this.user = found;
+                }
+
+                if(this.user) {
+                    document.getElementById('section-auth').classList.add('hidden');
+                    document.getElementById('layout-sistema').style.display = 'block';
+                    document.getElementById('user-info').innerText = this.user.nome;
+                    if(this.user.role === 'admin') document.getElementById('nav-adm').classList.remove('hidden');
+                    this.viewAtiva = 'dash';
+                    this.init();
+                } else alert("Acesso Inválido.");
+            },
+
+            // 4 - Suporte ao ENTER
+            globalEnter(e) {
+                if(e.key !== "Enter") return;
+                if(document.getElementById('layout-sistema').style.display === 'block') {
+                    if(this.viewAtiva === 'ent') this.dbSalvar();
+                    if(this.viewAtiva === 'sai') this.dbRemover();
+                } else {
+                    this.login();
+                }
+            },
+
+            dbSalvar() {
+                const cod = document.getElementById('ent-cod').value;
+                const nome = document.getElementById('ent-nome').value;
+                const venc = document.getElementById('ent-venc').value;
+                if(!cod || !nome) return alert("Preencha os campos obrigatórios.");
+                db.ref('materiais/' + cod).set({ cod, nome, venc });
+                this.log('ENTRADA', `${nome} (${cod})`);
+                ['ent-cod','ent-nome','ent-venc'].forEach(id => document.getElementById(id).value = "");
+                alert("Salvo com sucesso!");
+            },
+
+            // 4 - Pop-up de confirmação irreversível
+            dbRemover() {
+                const cod = document.getElementById('sai-cod').value;
+                const item = this.dados.materiais[cod];
+                if(!item) return alert("Material não localizado.");
+                
+                if(confirm(`ATENÇÃO: Você está prestes a excluir o item "${item.nome}" permanentemente.\n\nEsta ação é IRREVERSÍVEL. Deseja continuar?`)) {
+                    db.ref('materiais/' + cod).remove();
+                    this.log('SAÍDA', `${item.nome} (${cod})`);
+                    document.getElementById('sai-cod').value = "";
+                }
+            },
+
+            log(acao, desc) {
+                db.ref('logs').push({ data: new Date().toLocaleString(), user: this.user.nome, acao, desc });
+            },
+
+            // 6 - Vencimentos detalhados
+            checkVencimento() {
+                const container = document.getElementById('alertas-vencimento');
+                container.innerHTML = "";
+                Object.values(this.dados.materiais || {}).forEach(m => {
+                    if(!m.venc) return;
+                    const diff = Math.ceil((new Date(m.venc) - new Date()) / (1000*60*60*24));
+                    if(diff <= 10) {
+                        const dataBr = m.venc.split('-').reverse().join('/');
+                        container.innerHTML += `<div class="alert-item"><b>${m.nome}</b><br><small>Código: ${m.cod} | Vence em: ${dataBr} (${diff} dias)</small></div>`;
+                    }
+                });
+                document.getElementById('count-itens').innerText = Object.keys(this.dados.materiais || {}).length;
+            },
+
+            renderEstoque() {
+                const t = document.getElementById('busca').value.toLowerCase();
+                const corpo = document.getElementById('lista-est');
+                corpo.innerHTML = "";
+                Object.values(this.dados.materiais || {}).forEach(m => {
+                    if(m.nome.toLowerCase().includes(t) || m.cod.includes(t)) {
+                        const v = m.venc ? m.venc.split('-').reverse().join('/') : '-';
+                        corpo.innerHTML += `<tr style="border-bottom:1px solid #eee"><td>${m.cod}</td><td>${m.nome}</td><td>${v}</td></tr>`;
+                    }
+                });
+            },
+
+            // 2 e 7 - Limpeza de Logs um por um e apenas para Admin
+            renderLogs() {
+                const logs = Object.entries(this.dados.logs || {}).reverse();
+                const container = document.getElementById('lista-logs');
+                container.innerHTML = logs.map(([key, l]) => `
+                    <div class="log-row">
+                        <span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span>
+                        ${this.user.role === 'admin' ? `<button onclick="app.delLog('${key}')" style="color:red; cursor:pointer; background:none; border:none">🗑️</button>` : ''}
+                    </div>
+                `).join('');
+            },
+
+            delLog(key) { if(confirm("Remover este registro de log?")) db.ref('logs/'+key).remove(); },
+
+            // 3 - Opção Admin/User habilitada apenas para IEPEGES
+            renderAdmin() {
+                const container = document.getElementById('lista-users');
+                const isMaster = this.user.login === 'iepeges';
+                
+                container.innerHTML = Object.entries(this.dados.usuarios || {}).map(([key, u]) => `
+                    <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center">
+                        <div><b>${u.nome}</b><br><small>Login: ${u.login}</small></div>
+                        <div style="display:flex; gap:10px">
+                            <select onchange="app.setRole('${key}', this.value)" ${!isMaster ? 'disabled' : ''} style="width:120px; margin:0; padding:5px">
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Usuário</option>
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                            <button onclick="app.altSenha('${key}')" title="Trocar Senha">🔑</button>
+                            <button onclick="app.delUser('${key}')" style="color:red" title="Excluir">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            setRole(key, r) { db.ref('usuarios/'+key).update({ role: r }); },
+            altSenha(key) { const n = prompt("Nova senha:"); if(n) db.ref('usuarios/'+key).update({ pass: n }); },
+            delUser(key) { if(confirm("Excluir colaborador permanentemente?")) db.ref('usuarios/'+key).remove(); },
+            toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); },
+
+            nav(v) {
+                this.viewAtiva = v;
+                document.querySelectorAll('.view').forEach(x => x.classList.add('hidden'));
+                document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+                document.getElementById('v-'+v).classList.remove('hidden');
+                document.getElementById('nav-'+v).classList.add('active');
+                try { Quagga.stop(); } catch(e){}
+                document.querySelectorAll('.scanner-view').forEach(s => s.style.display = 'none');
+            },
+
+            scan(inputId, divId) {
+                const div = document.getElementById(divId); div.style.display = 'block';
+                Quagga.init({
+                    inputStream: { name: "Live", type: "LiveStream", target: div, constraints: { facingMode: "environment" } },
+                    decoder: { readers: ["ean_reader", "code_128_reader"] }
+                }, (err) => { if(!err) Quagga.start(); });
+                Quagga.onDetected((r) => {
+                    document.getElementById(inputId).value = r.codeResult.code;
+                    Quagga.stop(); div.style.display = 'none';
+                });
+            }
+        };
+    </script>
+</body>
+</html>
