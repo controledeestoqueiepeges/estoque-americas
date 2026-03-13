@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE ESTOQUE | v7.3</title>
+    <title>CONTROLE DE ESTOQUE | v7.4</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -169,10 +169,12 @@
             user: null,
             viewAtiva: 'login',
             dados: { materiais: {}, logs: {}, usuarios: {} },
+            carregado: false,
 
             init() {
                 db.ref('/').on('value', (snap) => {
                     this.dados = snap.val() || { materiais: {}, logs: {}, usuarios: {} };
+                    this.carregado = true;
                     this.renderEstoque();
                     this.renderLogs();
                     this.renderAdmin();
@@ -180,7 +182,6 @@
                 });
             },
 
-            // 1 - Lógica de Login (Primeira letra + Sobrenome)
             cadastrar() {
                 const n = document.getElementById('cad-nome').value.trim();
                 const p = document.getElementById('cad-pass').value;
@@ -190,33 +191,48 @@
                 if(partes.length < 2) return alert("Por favor, digite Nome e Sobrenome.");
                 
                 const login = (partes[0][0] + partes[partes.length - 1]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                
                 db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user' });
                 alert("Cadastro Realizado!\nSeu login é: " + login);
                 this.toggleAuth();
             },
 
             login() {
-                const u = document.getElementById('login-user').value.toLowerCase();
+                const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value;
                 
+                // Login Master (Sempre funciona)
                 if(u === 'iepeges' && p === 'itc@123@') {
                     this.user = {nome: 'MASTER', login: 'iepeges', role: 'admin'};
-                } else {
-                    const found = Object.values(this.dados.usuarios || {}).find(x => x.login === u && x.pass === p);
-                    if(found) this.user = found;
+                    this.entrarSistema();
+                    return;
                 }
 
-                if(this.user) {
-                    document.getElementById('section-auth').classList.add('hidden');
-                    document.getElementById('layout-sistema').style.display = 'block';
-                    document.getElementById('user-info').innerText = this.user.nome;
-                    if(this.user.role === 'admin') document.getElementById('nav-adm').classList.remove('hidden');
-                    this.viewAtiva = 'dash';
-                    this.init();
-                } else alert("Acesso Inválido.");
+                // Espera o banco carregar se ainda não estiver pronto
+                if(!this.carregado) {
+                    alert("Carregando banco de dados... tente novamente em 2 segundos.");
+                    return;
+                }
+
+                const listaUsers = this.dados.usuarios ? Object.values(this.dados.usuarios) : [];
+                const found = listaUsers.find(x => x.login === u && x.pass === p);
+
+                if(found) {
+                    this.user = found;
+                    this.entrarSistema();
+                } else {
+                    alert("Acesso Inválido. Verifique o login (primeira letra do nome + sobrenome).");
+                }
             },
 
-            // 4 - Suporte ao ENTER
+            entrarSistema() {
+                document.getElementById('section-auth').classList.add('hidden');
+                document.getElementById('layout-sistema').style.display = 'block';
+                document.getElementById('user-info').innerText = this.user.nome;
+                if(this.user.role === 'admin') document.getElementById('nav-adm').classList.remove('hidden');
+                this.viewAtiva = 'dash';
+            },
+
             globalEnter(e) {
                 if(e.key !== "Enter") return;
                 if(document.getElementById('layout-sistema').style.display === 'block') {
@@ -238,10 +254,9 @@
                 alert("Salvo com sucesso!");
             },
 
-            // 4 - Pop-up de confirmação irreversível
             dbRemover() {
                 const cod = document.getElementById('sai-cod').value;
-                const item = this.dados.materiais[cod];
+                const item = this.dados.materiais ? this.dados.materiais[cod] : null;
                 if(!item) return alert("Material não localizado.");
                 
                 if(confirm(`ATENÇÃO: Você está prestes a excluir o item "${item.nome}" permanentemente.\n\nEsta ação é IRREVERSÍVEL. Deseja continuar?`)) {
@@ -255,11 +270,11 @@
                 db.ref('logs').push({ data: new Date().toLocaleString(), user: this.user.nome, acao, desc });
             },
 
-            // 6 - Vencimentos detalhados
             checkVencimento() {
                 const container = document.getElementById('alertas-vencimento');
                 container.innerHTML = "";
-                Object.values(this.dados.materiais || {}).forEach(m => {
+                const materiais = this.dados.materiais ? Object.values(this.dados.materiais) : [];
+                materiais.forEach(m => {
                     if(!m.venc) return;
                     const diff = Math.ceil((new Date(m.venc) - new Date()) / (1000*60*60*24));
                     if(diff <= 10) {
@@ -267,14 +282,15 @@
                         container.innerHTML += `<div class="alert-item"><b>${m.nome}</b><br><small>Código: ${m.cod} | Vence em: ${dataBr} (${diff} dias)</small></div>`;
                     }
                 });
-                document.getElementById('count-itens').innerText = Object.keys(this.dados.materiais || {}).length;
+                document.getElementById('count-itens').innerText = materiais.length;
             },
 
             renderEstoque() {
                 const t = document.getElementById('busca').value.toLowerCase();
                 const corpo = document.getElementById('lista-est');
                 corpo.innerHTML = "";
-                Object.values(this.dados.materiais || {}).forEach(m => {
+                const materiais = this.dados.materiais ? Object.values(this.dados.materiais) : [];
+                materiais.forEach(m => {
                     if(m.nome.toLowerCase().includes(t) || m.cod.includes(t)) {
                         const v = m.venc ? m.venc.split('-').reverse().join('/') : '-';
                         corpo.innerHTML += `<tr style="border-bottom:1px solid #eee"><td>${m.cod}</td><td>${m.nome}</td><td>${v}</td></tr>`;
@@ -282,26 +298,25 @@
                 });
             },
 
-            // 2 e 7 - Limpeza de Logs um por um e apenas para Admin
             renderLogs() {
-                const logs = Object.entries(this.dados.logs || {}).reverse();
+                const logs = this.dados.logs ? Object.entries(this.dados.logs).reverse() : [];
                 const container = document.getElementById('lista-logs');
                 container.innerHTML = logs.map(([key, l]) => `
                     <div class="log-row">
                         <span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span>
-                        ${this.user.role === 'admin' ? `<button onclick="app.delLog('${key}')" style="color:red; cursor:pointer; background:none; border:none">🗑️</button>` : ''}
+                        ${this.user && this.user.role === 'admin' ? `<button onclick="app.delLog('${key}')" style="color:red; cursor:pointer; background:none; border:none">🗑️</button>` : ''}
                     </div>
                 `).join('');
             },
 
             delLog(key) { if(confirm("Remover este registro de log?")) db.ref('logs/'+key).remove(); },
 
-            // 3 - Opção Admin/User habilitada apenas para IEPEGES
             renderAdmin() {
                 const container = document.getElementById('lista-users');
-                const isMaster = this.user.login === 'iepeges';
+                const isMaster = this.user && this.user.login === 'iepeges';
+                const usuarios = this.dados.usuarios ? Object.entries(this.dados.usuarios) : [];
                 
-                container.innerHTML = Object.entries(this.dados.usuarios || {}).map(([key, u]) => `
+                container.innerHTML = usuarios.map(([key, u]) => `
                     <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center">
                         <div><b>${u.nome}</b><br><small>Login: ${u.login}</small></div>
                         <div style="display:flex; gap:10px">
@@ -343,6 +358,9 @@
                 });
             }
         };
+
+        // Inicializa o app imediatamente
+        app.init();
     </script>
 </body>
 </html>
