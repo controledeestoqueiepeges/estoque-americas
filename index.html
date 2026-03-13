@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE ESTOQUE | v7.4</title>
+    <title>CONTROLE DE ESTOQUE | v7.5</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -32,7 +32,7 @@
 
         main { margin-left: 240px; margin-top: 65px; padding: 20px; }
         .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; background: #fff; }
         .btn-principal { background: var(--roxo); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
         
         .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); position: relative; overflow: hidden; }
@@ -191,7 +191,6 @@
                 if(partes.length < 2) return alert("Por favor, digite Nome e Sobrenome.");
                 
                 const login = (partes[0][0] + partes[partes.length - 1]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                
                 db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user' });
                 alert("Cadastro Realizado!\nSeu login é: " + login);
                 this.toggleAuth();
@@ -201,16 +200,14 @@
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value;
                 
-                // Login Master (Sempre funciona)
                 if(u === 'iepeges' && p === 'itc@123@') {
                     this.user = {nome: 'MASTER', login: 'iepeges', role: 'admin'};
                     this.entrarSistema();
                     return;
                 }
 
-                // Espera o banco carregar se ainda não estiver pronto
                 if(!this.carregado) {
-                    alert("Carregando banco de dados... tente novamente em 2 segundos.");
+                    alert("Aguarde o carregamento do banco de dados...");
                     return;
                 }
 
@@ -221,7 +218,7 @@
                     this.user = found;
                     this.entrarSistema();
                 } else {
-                    alert("Acesso Inválido. Verifique o login (primeira letra do nome + sobrenome).");
+                    alert("Acesso Inválido.");
                 }
             },
 
@@ -256,10 +253,10 @@
 
             dbRemover() {
                 const cod = document.getElementById('sai-cod').value;
-                const item = this.dados.materiais ? this.dados.materiais[cod] : null;
+                const item = (this.dados.materiais && this.dados.materiais[cod]) ? this.dados.materiais[cod] : null;
                 if(!item) return alert("Material não localizado.");
                 
-                if(confirm(`ATENÇÃO: Você está prestes a excluir o item "${item.nome}" permanentemente.\n\nEsta ação é IRREVERSÍVEL. Deseja continuar?`)) {
+                if(confirm(`ATENÇÃO: Você está prestes a excluir o item permanentemente.\n\nEsta ação é IRREVERSÍVEL. Deseja continuar?`)) {
                     db.ref('materiais/' + cod).remove();
                     this.log('SAÍDA', `${item.nome} (${cod})`);
                     document.getElementById('sai-cod').value = "";
@@ -304,24 +301,27 @@
                 container.innerHTML = logs.map(([key, l]) => `
                     <div class="log-row">
                         <span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span>
-                        ${this.user && this.user.role === 'admin' ? `<button onclick="app.delLog('${key}')" style="color:red; cursor:pointer; background:none; border:none">🗑️</button>` : ''}
+                        ${(this.user && this.user.role === 'admin') ? `<button onclick="app.delLog('${key}')" style="color:red; cursor:pointer; background:none; border:none">🗑️</button>` : ''}
                     </div>
                 `).join('');
             },
 
-            delLog(key) { if(confirm("Remover este registro de log?")) db.ref('logs/'+key).remove(); },
+            delLog(key) { if(confirm("Remover este log?")) db.ref('logs/'+key).remove(); },
 
             renderAdmin() {
                 const container = document.getElementById('lista-users');
-                const isMaster = this.user && this.user.login === 'iepeges';
+                if(!container) return;
+                
+                // Força o sistema a saber se o usuário logado é o MASTER iepeges
+                const isMaster = (this.user && this.user.login === 'iepeges');
                 const usuarios = this.dados.usuarios ? Object.entries(this.dados.usuarios) : [];
                 
                 container.innerHTML = usuarios.map(([key, u]) => `
                     <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center">
                         <div><b>${u.nome}</b><br><small>Login: ${u.login}</small></div>
                         <div style="display:flex; gap:10px">
-                            <select onchange="app.setRole('${key}', this.value)" ${!isMaster ? 'disabled' : ''} style="width:120px; margin:0; padding:5px">
-                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Usuário</option>
+                            <select onchange="app.setRole('${key}', this.value)" ${!isMaster ? 'disabled' : ''} style="width:120px; margin:0; padding:5px; border: 1px solid #ccc; border-radius:4px">
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Padrão</option>
                                 <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
                             </select>
                             <button onclick="app.altSenha('${key}')" title="Trocar Senha">🔑</button>
@@ -331,9 +331,17 @@
                 `).join('');
             },
 
-            setRole(key, r) { db.ref('usuarios/'+key).update({ role: r }); },
+            setRole(key, novoCargo) {
+                db.ref('usuarios/' + key).update({ role: novoCargo }).then(() => {
+                    alert("Cargo atualizado com sucesso!");
+                    this.renderAdmin();
+                }).catch(err => {
+                    alert("Erro ao atualizar cargo: " + err.message);
+                });
+            },
+
             altSenha(key) { const n = prompt("Nova senha:"); if(n) db.ref('usuarios/'+key).update({ pass: n }); },
-            delUser(key) { if(confirm("Excluir colaborador permanentemente?")) db.ref('usuarios/'+key).remove(); },
+            delUser(key) { if(confirm("Excluir colaborador?")) db.ref('usuarios/'+key).remove(); },
             toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); },
 
             nav(v) {
@@ -359,7 +367,6 @@
             }
         };
 
-        // Inicializa o app imediatamente
         app.init();
     </script>
 </body>
