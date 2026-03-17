@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE ESTOQUE | v.2.5 - By Milton Rangel</title>
+    <title>CONTROLE DE KIT | v.2.6</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -24,7 +24,7 @@
         .logo-login { width: 100%; max-width: 300px; margin-bottom: 20px; }
         .card-auth { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--roxo); text-align: left; }
 
-        #layout-sistema { display: none; min-height: 100vh; }
+        #layout-sistema { display: none; min-height: 100vh; padding-bottom: 60px; }
         header { background: var(--escuro); color: white; height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; }
         header img { height: 28px; filter: brightness(0) invert(1); }
 
@@ -57,15 +57,14 @@
         .bg-entrada { background: var(--verde); }
         .bg-saida { background: var(--vermelho); }
 
-        .filtros-inline { display: flex; gap: 10px; margin-bottom: 15px; }
-        .filtros-inline > div { flex: 1; }
-
         .hidden { display: none !important; }
         .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); overflow: hidden; }
-
         .btn-adm { background: #eee; border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
 
-        @media (max-width: 768px) { .sidebar { width: 60px; } .nav-btn span { display: none; } main { margin-left: 60px; } .filtros-inline { flex-direction: column; } }
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--escuro); color: #cbb2ff; text-align: center; padding: 10px; font-size: 12px; z-index: 1001; border-top: 1px solid var(--roxo); }
+        footer a { color: white; text-decoration: none; font-weight: bold; }
+
+        @media (max-width: 768px) { .sidebar { width: 60px; } .nav-btn span { display: none; } main { margin-left: 60px; } }
     </style>
 </head>
 <body onkeydown="app.globalEnter(event)">
@@ -131,63 +130,24 @@
             <div id="v-est" class="view hidden">
                 <div class="card">
                     <h3>Kits Disponíveis em Estoque</h3>
-                    <div class="filtros-inline">
-                        <div>
-                            <label>Filtrar com:</label>
-                            <select id="filtro-coluna" onchange="app.renderEstoque()">
-                                <option value="nome">Nome do Kit</option>
-                                <option value="cod">Código</option>
-                                <option value="prot">Protocolo</option>
-                                <option value="venc">Data de Vencimento</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Termo de Busca:</label>
-                            <input type="text" id="busca" placeholder="Digite para filtrar..." onkeyup="app.renderEstoque()">
-                        </div>
+                    <div class="filtros-inline" style="display:flex; gap:10px; margin-bottom:15px">
+                        <div style="flex:1"><select id="filtro-coluna" onchange="app.renderEstoque()"><option value="nome">Nome do Kit</option><option value="cod">Código</option><option value="prot">Protocolo</option><option value="venc">Vencimento</option></select></div>
+                        <div style="flex:1"><input type="text" id="busca" placeholder="Filtrar..." onkeyup="app.renderEstoque()"></div>
                     </div>
-                    <table>
-                        <thead><tr><th>Código</th><th>Nome do Kit</th><th>Protocolo</th><th>Vencimento</th></tr></thead>
-                        <tbody id="lista-est"></tbody>
-                    </table>
+                    <table><thead><tr><th>Código</th><th>Nome do Kit</th><th>Protocolo</th><th>Vencimento</th></tr></thead><tbody id="lista-est"></tbody></table>
                 </div>
             </div>
 
-            <div id="v-mov" class="view hidden">
-                <div class="card">
-                    <h3>Movimentação de Kits</h3>
-                    <button class="btn-excel" onclick="app.exportarExcel()">📗 Exportar Excel</button>
-                    <input type="text" id="busca-mov" placeholder="Filtrar movimentação..." onkeyup="app.renderMov()">
-                    <div id="lista-movimentacao"></div>
-                </div>
-            </div>
-
-            <div id="v-ent" class="view hidden">
-                <div class="card">
-                    <h3>Entrada de Kit</h3>
-                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear</button>
-                    <div id="s-ent" class="scanner-view"></div>
-                    <label>Código</label><input type="text" id="ent-cod">
-                    <label>Nome do Kit</label><input type="text" id="ent-nome">
-                    <label>Protocolo</label><input type="text" id="ent-prot">
-                    <label>Validade</label><input type="date" id="ent-venc">
-                    <button class="btn-principal" onclick="app.dbSalvar()">SALVAR ENTRADA</button>
-                </div>
-            </div>
-
-            <div id="v-sai" class="view hidden">
-                <div class="card">
-                    <h3>Saída de Kit</h3>
-                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear</button>
-                    <div id="s-sai" class="scanner-view"></div>
-                    <label>Código do Produto</label><input type="text" id="sai-cod">
-                    <button class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
-                </div>
-            </div>
-
+            <div id="v-mov" class="view hidden"><div class="card"><h3>Movimentação de Kits</h3><button class="btn-excel" onclick="app.exportarExcel()">📗 Exportar Excel</button><input type="text" id="busca-mov" placeholder="Filtrar movimentação..." onkeyup="app.renderMov()"><div id="lista-movimentacao"></div></div></div>
+            <div id="v-ent" class="view hidden"><div class="card"><h3>Entrada de Kit</h3><button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear</button><div id="s-ent" class="scanner-view"></div><label>Código</label><input type="text" id="ent-cod"><label>Nome do Kit</label><input type="text" id="ent-nome"><label>Protocolo</label><input type="text" id="ent-prot"><label>Validade</label><input type="date" id="ent-venc"><button class="btn-principal" onclick="app.dbSalvar()">SALVAR ENTRADA</button></div></div>
+            <div id="v-sai" class="view hidden"><div class="card"><h3>Saída de Kit</h3><button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear</button><div id="s-sai" class="scanner-view"></div><label>Código do Produto</label><input type="text" id="sai-cod"><button class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button></div></div>
             <div id="v-rel" class="view hidden"><div class="card"><h3>Logs do Sistema</h3><div id="lista-logs"></div></div></div>
             <div id="v-adm" class="view hidden"><div class="card"><h3>Gestão de Colaboradores</h3><div id="lista-users"></div></div></div>
         </main>
+
+        <footer>
+            Desenvolvido por <b>Milton Rangel</b> em 03/2026 - Contato: <a href="mailto:tomrangelguitar@gmail.com">tomrangelguitar@gmail.com</a>
+        </footer>
     </div>
 
     <script>
@@ -238,46 +198,40 @@
                         document.getElementById('nav-rel').classList.remove('hidden');
                     }
                     this.nav('dash');
-                } else { alert("Dados incorretos."); }
+                } else { alert("Acesso negado."); }
             },
 
             cadastrar() {
                 const n = document.getElementById('cad-nome').value.trim();
                 const p = document.getElementById('cad-pass').value.trim();
-                if(n.length < 3 || p.length < 4) return alert("Erro: Nome e Senha.");
+                if(n.length < 3 || p.length < 4) return alert("Dados inválidos.");
                 const login = n.split(' ')[0].toLowerCase() + Math.floor(Math.random()*100);
                 db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user' });
-                alert("Solicitação enviada! Login: " + login);
+                alert("Cadastrado! Login: " + login);
                 this.toggleAuth();
             },
 
             editPass(key) {
-                const p = prompt("Digite a nova senha:");
+                const p = prompt("Nova senha:");
                 if(p && p.length >= 4) db.ref('usuarios/' + key).update({ pass: p });
             },
 
             editRole(key, current) {
                 const next = current === 'admin' ? 'user' : 'admin';
-                if(confirm("Mudar cargo para " + next.toUpperCase() + "?")) db.ref('usuarios/' + key).update({ role: next });
+                if(confirm("Mudar cargo?")) db.ref('usuarios/' + key).update({ role: next });
             },
-
-            delUser(key) { if(confirm("Remover acesso?")) db.ref('usuarios/' + key).remove(); },
 
             renderAdmin() {
                 const container = document.getElementById('lista-users');
                 if(!container) return;
-                const isMaster = (this.user && this.user.login === 'iepeges');
                 container.innerHTML = Object.entries(this.dados.usuarios).map(([key, u]) => `
                     <div class="log-row">
-                        <span><b>${u.nome}</b> <small style="color:blue">[${u.role.toUpperCase()}]</small><br> 
-                        <small style="color:var(--roxo)">Login: ${u.login} | Senha: ${u.pass}</small></span>
+                        <span><b>${u.nome}</b> [${u.role.toUpperCase()}]<br><small>Login: ${u.login} | Senha: ${u.pass}</small></span>
                         <div>
-                            <button class="btn-adm" onclick="app.editPass('${key}')" title="Trocar Senha">🔑</button>
-                            <button class="btn-adm" onclick="app.editRole('${key}', '${u.role}')" title="Trocar Cargo">🛡️</button>
-                            ${isMaster ? `<button class="btn-adm" onclick="app.delUser('${key}')" style="color:red">🗑️</button>` : ''}
+                            <button class="btn-adm" onclick="app.editPass('${key}')">🔑</button>
+                            <button class="btn-adm" onclick="app.editRole('${key}', '${u.role}')">🛡️</button>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`).join('');
             },
 
             dbSalvar() {
@@ -285,21 +239,21 @@
                 const nome = document.getElementById('ent-nome').value.trim();
                 const prot = document.getElementById('ent-prot').value.trim();
                 const venc = document.getElementById('ent-venc').value;
-                if(!cod || !nome) return alert("Erro: Código e Nome.");
+                if(!cod || !nome) return alert("Preencha Código e Nome.");
                 db.ref('materiais/' + cod).set({ cod, nome, prot, venc });
-                db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'ENTRADA', desc: `Kit: ${nome} | Prot: ${prot || '-'}` });
+                db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'ENTRADA', desc: `Kit: ${nome}` });
                 ['ent-cod','ent-nome','ent-prot','ent-venc'].forEach(id => document.getElementById(id).value = "");
-                alert("Entrada registrada!");
+                alert("Salvo!");
             },
 
             dbRemover() {
                 const cod = document.getElementById('sai-cod').value.trim();
                 const item = this.dados.materiais[cod];
-                if(item && confirm(`Dar baixa no kit: ${item.nome}?`)) {
+                if(item && confirm(`Baixa em: ${item.nome}?`)) {
                     db.ref('materiais/' + cod).remove();
                     db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'SAÍDA', desc: `Kit: ${item.nome} (${cod})` });
                     document.getElementById('sai-cod').value = "";
-                } else if(!item) { alert("Código não encontrado."); }
+                }
             },
 
             checkVencimento() {
@@ -309,11 +263,10 @@
                 const hoje = new Date(); hoje.setHours(0,0,0,0);
                 Object.values(this.dados.materiais).forEach(m => {
                     if(!m.venc) return;
-                    const dVenc = new Date(m.venc); dVenc.setHours(0,0,0,0);
-                    const diff = Math.ceil((dVenc - hoje) / (1000*60*60*24));
+                    const diff = Math.ceil((new Date(m.venc) - hoje) / (1000*60*60*24));
                     const fmt = m.venc.split('-').reverse().join('/');
-                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena"><b>${m.nome}</b><br><small>Prot: ${m.prot || '-'} | Vencido em: ${fmt}</small></div>`;
-                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo"><b>${m.nome}</b><br><small>Prot: ${m.prot || '-'} | Vence em: ${fmt} (${diff} d)</small></div>`;
+                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena"><b>${m.nome}</b><br><small>Venceu em: ${fmt}</small></div>`;
+                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo"><b>${m.nome}</b><br><small>Vence em: ${fmt} (${diff} d)</small></div>`;
                 });
                 document.getElementById('count-itens').innerText = Object.keys(this.dados.materiais).length;
             },
@@ -322,11 +275,7 @@
                 const col = document.getElementById('filtro-coluna').value;
                 const busca = document.getElementById('busca').value.toLowerCase();
                 const corpo = document.getElementById('lista-est');
-                corpo.innerHTML = Object.values(this.dados.materiais).filter(m => {
-                    let valor = (m[col] || "").toLowerCase();
-                    if(col === 'venc' && valor) valor = valor.split('-').reverse().join('/');
-                    return valor.includes(busca);
-                }).map(m => `<tr><td>${m.cod}</td><td style="text-align:left"><b>${m.nome}</b></td><td>${m.prot || '-'}</td><td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td></tr>`).join('');
+                corpo.innerHTML = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca)).map(m => `<tr><td>${m.cod}</td><td style="text-align:left"><b>${m.nome}</b></td><td>${m.prot || '-'}</td><td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td></tr>`).join('');
             },
 
             renderMov() {
@@ -334,15 +283,7 @@
                 if(!container) return;
                 const busca = document.getElementById('busca-mov').value.toLowerCase();
                 const logs = Object.values(this.dados.logs).reverse().filter(l => (l.acao === 'ENTRADA' || l.acao === 'SAÍDA') && l.desc.toLowerCase().includes(busca));
-                container.innerHTML = logs.map(l => `
-                    <div class="log-row">
-                        <span>
-                            <span class="badge-mov ${l.acao === 'ENTRADA' ? 'bg-entrada' : 'bg-saida'}">${l.acao}</span>
-                            <b style="margin-left:10px">${l.desc}</b><br>
-                            <small style="margin-left:55px; color:#666">Responsável: ${l.user}</small>
-                        </span>
-                        <small>${l.data}</small>
-                    </div>`).join('');
+                container.innerHTML = logs.map(l => `<div class="log-row"><span><span class="badge-mov ${l.acao === 'ENTRADA' ? 'bg-entrada' : 'bg-saida'}">${l.acao}</span> <b>${l.desc}</b><br><small>Responsável: ${l.user}</small></span><small>${l.data}</small></div>`).join('');
             },
 
             renderLogs() {
@@ -352,14 +293,9 @@
             },
 
             exportarExcel() {
-                const movs = Object.values(this.dados.logs).filter(l => l.acao === 'ENTRADA' || l.acao === 'SAÍDA').reverse().map(m => ({ 
-                    'Data': m.data, 
-                    'Responsável': m.user, 
-                    'Tipo': m.acao, 
-                    'Descrição': m.desc 
-                }));
-                const ws = XLSX.utils.json_to_sheet(movs); const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Movimentação"); XLSX.writeFile(wb, `Relatorio_Estoque.xlsx`);
+                const ws = XLSX.utils.json_to_sheet(Object.values(this.dados.logs).filter(l => l.acao === 'ENTRADA' || l.acao === 'SAÍDA'));
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Movimentação");
+                XLSX.writeFile(wb, "Relatorio.xlsx");
             },
 
             nav(v) {
