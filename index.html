@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE KIT | v.Inicial - By Milton Rangel</title>
+    <title>CONTROLE DE KIT | v.1.0.0 - By Milton Rangel</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -118,7 +118,7 @@
                         <div id="lista-quarentena"></div>
                     </div>
                     <div class="col-venc">
-                        <div class="titulo-setor" style="color:var(--alerta-laranja)">⚠️ Vencendo (10 dias)</div>
+                        <div class="titulo-setor" style="color:var(--alerta-laranja)">⚠️ Vencendo (45 dias)</div>
                         <div id="lista-vencendo"></div>
                     </div>
                 </div>
@@ -251,7 +251,6 @@
                 this.toggleAuth();
             },
 
-            // FUNÇÕES DE GESTÃO ADICIONADAS À BASE DA V.2.0
             editPass(key) {
                 const p = prompt("Digite a nova senha:");
                 if(p && p.length >= 4) db.ref('usuarios/' + key).update({ pass: p });
@@ -314,7 +313,7 @@
                     const diff = Math.ceil((dVenc - hoje) / (1000*60*60*24));
                     const fmt = m.venc.split('-').reverse().join('/');
                     if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena"><b>${m.nome}</b><br><small>Prot: ${m.prot || '-'} | Vencido em: ${fmt}</small></div>`;
-                    else if(diff <= 10) v.innerHTML += `<div class="alert-item bg-vencendo"><b>${m.nome}</b><br><small>Prot: ${m.prot || '-'} | Vence em: ${fmt} (${diff} d)</small></div>`;
+                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo"><b>${m.nome}</b><br><small>Prot: ${m.prot || '-'} | Vence em: ${fmt} (${diff} d)</small></div>`;
                 });
                 document.getElementById('count-itens').innerText = Object.keys(this.dados.materiais).length;
             },
