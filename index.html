@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE ESTOQUE | v.1.4 - By Milton Rangel</title>
+    <title>CONTROLE DE ESTOQUE | v.1.5 - By Milton Rangel</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -138,8 +138,8 @@
                     <label>Código do Produto</label>
                     <input type="text" id="ent-cod" placeholder="Escanear ou digitar código">
                     
-                    <label>Nome do Material</label>
-                    <input type="text" id="ent-nome" placeholder="Nome do item">
+                    <label>Nome do Kit</label>
+                    <input type="text" id="ent-nome" placeholder="Nome do Kit">
                     
                     <label>Número do Protocolo</label>
                     <input type="text" id="ent-prot" placeholder="Ex: 2026-XYZ-001">
@@ -239,26 +239,22 @@
                 const prot = document.getElementById('ent-prot').value.trim();
                 const venc = document.getElementById('ent-venc').value;
                 
-                if(!cod || !nome) return alert("Preencha Código e Material.");
+                if(!cod || !nome) return alert("Preencha Código e Nome do Kit.");
                 
-                // Salva no banco com o novo campo de protocolo
                 db.ref('materiais/' + cod).set({ cod, nome, prot, venc });
+                this.log('ENTRADA', `Kit: ${nome} (${cod}) | Prot: ${prot || 'N/A'}`);
                 
-                // Registra o log detalhado
-                this.log('ENTRADA', `${nome} (${cod}) | Prot: ${prot || 'N/A'}`);
-                
-                // Limpa os campos
                 ['ent-cod','ent-nome','ent-prot','ent-venc'].forEach(id => document.getElementById(id).value = "");
-                alert("Entrada registrada com sucesso!");
+                alert("Entrada do Kit registrada!");
             },
 
             dbRemover() {
                 const cod = document.getElementById('sai-cod').value.trim();
                 const item = this.dados.materiais[cod];
-                if(!item) return alert("Item não encontrado.");
-                if(confirm(`Baixa em: ${item.nome}?`)) {
+                if(!item) return alert("Kit não encontrado.");
+                if(confirm(`Baixa no kit: ${item.nome}?`)) {
                     db.ref('materiais/' + cod).remove();
-                    this.log('SAÍDA', `${item.nome} (${cod})`);
+                    this.log('SAÍDA', `Kit: ${item.nome} (${cod})`);
                     document.getElementById('sai-cod').value = "";
                     alert("Baixa concluída.");
                 }
