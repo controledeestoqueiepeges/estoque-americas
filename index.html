@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE KIT | v.1.0.0 - By Milton Rangel</title>
+    <title>CONTROLE DE ESTOQUE | v.2.5 - By Milton Rangel</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -334,7 +334,15 @@
                 if(!container) return;
                 const busca = document.getElementById('busca-mov').value.toLowerCase();
                 const logs = Object.values(this.dados.logs).reverse().filter(l => (l.acao === 'ENTRADA' || l.acao === 'SAÍDA') && l.desc.toLowerCase().includes(busca));
-                container.innerHTML = logs.map(l => `<div class="log-row"><span><span class="badge-mov ${l.acao === 'ENTRADA' ? 'bg-entrada' : 'bg-saida'}">${l.acao}</span><b style="margin-left:10px">${l.desc}</b></span><small>${l.data}</small></div>`).join('');
+                container.innerHTML = logs.map(l => `
+                    <div class="log-row">
+                        <span>
+                            <span class="badge-mov ${l.acao === 'ENTRADA' ? 'bg-entrada' : 'bg-saida'}">${l.acao}</span>
+                            <b style="margin-left:10px">${l.desc}</b><br>
+                            <small style="margin-left:55px; color:#666">Responsável: ${l.user}</small>
+                        </span>
+                        <small>${l.data}</small>
+                    </div>`).join('');
             },
 
             renderLogs() {
@@ -344,7 +352,12 @@
             },
 
             exportarExcel() {
-                const movs = Object.values(this.dados.logs).filter(l => l.acao === 'ENTRADA' || l.acao === 'SAÍDA').reverse().map(m => ({ 'Data': m.data, 'Usuário': m.user, 'Tipo': m.acao, 'Descrição': m.desc }));
+                const movs = Object.values(this.dados.logs).filter(l => l.acao === 'ENTRADA' || l.acao === 'SAÍDA').reverse().map(m => ({ 
+                    'Data': m.data, 
+                    'Responsável': m.user, 
+                    'Tipo': m.acao, 
+                    'Descrição': m.desc 
+                }));
                 const ws = XLSX.utils.json_to_sheet(movs); const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Movimentação"); XLSX.writeFile(wb, `Relatorio_Estoque.xlsx`);
             },
