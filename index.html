@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONTROLE DE ESTOQUE | v.2.9 - By Milton Rangel</title>
+    <title>CONTROLE DE ESTOQUE | v.3.2 - By Milton Rangel</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -53,16 +53,16 @@
         td { padding: 10px; border: 1px solid #eee; font-size: 14px; text-align: center; }
 
         .log-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px; }
+        .log-row.pendente { background: #fff9db; border-left: 5px solid var(--alerta-laranja); }
         .badge-mov { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; color: white; }
         .bg-entrada { background: var(--verde); }
         .bg-saida { background: var(--vermelho); }
 
-        /* NOVO: Estilo para os detalhes na movimentação */
         .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
 
         .hidden { display: none !important; }
         .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); overflow: hidden; }
-        .btn-adm { background: #eee; border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
+        .btn-adm { background: #eee; border: 1px solid #ccc; padding: 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; font-size: 14px; }
 
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--escuro); color: #cbb2ff; text-align: center; padding: 10px; font-size: 12px; z-index: 1001; border-top: 1px solid var(--roxo); }
         footer a { color: white; text-decoration: none; font-weight: bold; }
@@ -83,6 +83,7 @@
         </div>
         <div id="card-cad" class="card-auth hidden">
             <h3>Novo Cadastro</h3>
+            <p style="font-size:12px; color:gray; margin-bottom:10px;">Atenção: Seu acesso precisará de liberação do Administrador após o cadastro.</p>
             <input type="text" id="cad-nome" placeholder="Nome Completo">
             <input type="password" id="cad-pass" placeholder="Senha (mín. 4 digitos)" maxlength="8">
             <button class="btn-principal" onclick="app.cadastrar()">ENVIAR SOLICITAÇÃO</button>
@@ -135,7 +136,7 @@
                     <h3>Kits Disponíveis em Estoque</h3>
                     <div class="filtros-inline" style="display:flex; gap:10px; margin-bottom:15px">
                         <div style="flex:1"><select id="filtro-coluna" onchange="app.renderEstoque()"><option value="nome">Nome do Kit</option><option value="cod">Código</option><option value="prot">Protocolo</option><option value="venc">Vencimento</option></select></div>
-                        <div style="flex:1"><input type="text" id="busca" placeholder="Filtrar..." onkeyup="app.renderEstoque()"></div>
+                        <div style="flex:1"><input type="text" id="busca" placeholder="Filtrar estoque..." onkeyup="app.renderEstoque()"></div>
                     </div>
                     <table><thead><tr><th>Código</th><th>Nome do Kit</th><th>Protocolo</th><th>Vencimento</th></tr></thead><tbody id="lista-est"></tbody></table>
                 </div>
@@ -143,9 +144,9 @@
 
             <div id="v-mov" class="view hidden">
                 <div class="card">
-                    <h3>Movimentação de Kits</h3>
-                    <button class="btn-excel" onclick="app.exportarExcel()">📗 Exportar Excel</button>
-                    <input type="text" id="busca-mov" placeholder="Filtrar movimentação..." onkeyup="app.renderMov()">
+                    <h3>Movimentação Completa</h3>
+                    <button class="btn-excel" onclick="app.exportarExcel()">📗 Exportar Relatório</button>
+                    <input type="text" id="busca-mov" placeholder="Buscar por Kit ou Protocolo..." onkeyup="app.renderMov()">
                     <div id="lista-movimentacao"></div>
                 </div>
             </div>
@@ -153,24 +154,24 @@
             <div id="v-ent" class="view hidden">
                 <div class="card">
                     <h3>Entrada de Kit</h3>
-                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear</button>
+                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código</button>
                     <div id="s-ent" class="scanner-view"></div>
-                    <label>Código</label><input type="text" id="ent-cod">
+                    <label>Código do Kit</label><input type="text" id="ent-cod">
                     <label>Nome do Kit</label><input type="text" id="ent-nome">
                     <label>Protocolo</label>
                     <select id="ent-prot">
-                        <option value="">Selecione um Protocolo...</option>
+                        <option value="">Selecione...</option>
                         <option value="20230246">20230246</option><option value="2011 (HARMONY)">2011 (HARMONY)</option><option value="AMGEN20230153">AMGEN20230153</option><option value="ARANOTE">ARANOTE</option><option value="ASCENT 7">ASCENT 7</option><option value="ATLAS">ATLAS</option><option value="BLUESTAR">BLUESTAR</option><option value="CA057-001">CA057-001</option><option value="CÂMBRIA 2">CÂMBRIA 2</option><option value="CAMELOT">CAMELOT</option><option value="CELLTRION">CELLTRION</option><option value="CLEE0011012001">CLEE0011012001</option><option value="DREAMM 7">DREAMM 7</option><option value="DS302">DS302</option><option value="ELEGANT">ELEGANT</option><option value="ESCALADE">ESCALADE</option><option value="EVOPAR">EVOPAR</option><option value="EVOPAR 2">EVOPAR 2</option><option value="EXCALIBER">EXCALIBER</option><option value="EXCALIBER MANUTENÇÃO">EXCALIBER MANUTENÇÃO</option><option value="GLOBRYTE">GLOBRYTE</option><option value="IMGN853-0421">IMGN853-0421</option><option value="IRAKLIA">IRAKLIA</option><option value="JPCF">JPCF</option><option value="JZLH">JZLH</option><option value="KER-050-D301">KER-050-D301</option><option value="LINKER">LINKER</option><option value="MAGNETISMM 32">MAGNETISMM 32</option><option value="MAGNETISMM 5">MAGNETISMM 5</option><option value="MAGNITUDE 01">MAGNITUDE 01</option><option value="MAGNITUDE 02">MAGNITUDE 02</option><option value="MAJESTEC 4">MAJESTEC 4</option><option value="MARIGOLD">MARIGOLD</option><option value="MK1084-004">MK1084-004</option><option value="MK-2870-020">MK-2870-020</option><option value="MONUMENTAL 3">MONUMENTAL 3</option><option value="MONUMENTAL 6">MONUMENTAL 6</option><option value="MOUTAINEER 03">MOUTAINEER 03</option><option value="OLYMPIA 01">OLYMPIA 01</option><option value="OLYMPIA 02">OLYMPIA 02</option><option value="OLYMPIA 03">OLYMPIA 03</option><option value="PRISM-MEL">PRISM-MEL</option><option value="REJOICE">REJOICE</option><option value="RYL-2608-102">RYL-2608-102</option><option value="SYMPHONY">SYMPHONY</option><option value="TROPIONLUNG15">TROPIONLUNG15</option><option value="VANTAGE">VANTAGE</option>
                     </select>
-                    <label>Validade</label><input type="date" id="ent-venc">
-                    <button class="btn-principal" onclick="app.dbSalvar()">SALVAR ENTRADA</button>
+                    <label>Data de Validade</label><input type="date" id="ent-venc">
+                    <button class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
                 </div>
             </div>
 
             <div id="v-sai" class="view hidden">
                 <div class="card">
                     <h3>Saída de Kit</h3>
-                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear</button>
+                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear Código</button>
                     <div id="s-sai" class="scanner-view"></div>
                     <label>Código do Produto</label><input type="text" id="sai-cod">
                     <button class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
@@ -178,7 +179,14 @@
             </div>
 
             <div id="v-rel" class="view hidden"><div class="card"><h3>Logs do Sistema</h3><div id="lista-logs"></div></div></div>
-            <div id="v-adm" class="view hidden"><div class="card"><h3>Gestão de Colaboradores</h3><div id="lista-users"></div></div></div>
+            
+            <div id="v-adm" class="view hidden">
+                <div class="card">
+                    <h3>Gestão de Colaboradores</h3>
+                    <p style="font-size:12px; color:gray">Aprove novos cadastros, altere senhas ou cargos aqui.</p>
+                    <div id="lista-users"></div>
+                </div>
+            </div>
         </main>
 
         <footer>
@@ -221,11 +229,15 @@
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
                 if(u === 'iepeges' && p === 'itc@123@') {
-                    this.user = { nome: 'MASTER', login: 'iepeges', role: 'admin' };
+                    this.user = { nome: 'MASTER', login: 'iepeges', role: 'admin', ativo: true };
                 } else {
                     this.user = Object.values(this.dados.usuarios).find(x => x.login === u && x.pass === p);
                 }
                 if(this.user) {
+                    if(this.user.ativo === false) {
+                        alert("Sua conta aguarda aprovação do Administrador.");
+                        return;
+                    }
                     document.getElementById('section-auth').classList.add('hidden');
                     document.getElementById('layout-sistema').style.display = 'block';
                     document.getElementById('user-info').innerText = this.user.nome;
@@ -240,11 +252,47 @@
             cadastrar() {
                 const n = document.getElementById('cad-nome').value.trim();
                 const p = document.getElementById('cad-pass').value.trim();
-                if(n.length < 3 || p.length < 4) return alert("Dados inválidos.");
+                if(n.length < 3 || p.length < 4) return alert("Dados insuficientes.");
                 const login = n.split(' ')[0].toLowerCase() + Math.floor(Math.random()*100);
-                db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user' });
-                alert("Cadastrado! Login: " + login);
+                db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user', ativo: false });
+                alert(`Solicitação enviada! Login: ${login}\nPeça ao Master para liberar seu acesso.`);
                 this.toggleAuth();
+            },
+
+            liberarUser(key, status) {
+                const msg = status ? "Ativar este usuário?" : "Bloquear este usuário?";
+                if(confirm(msg)) db.ref('usuarios/' + key).update({ ativo: status });
+            },
+
+            editPass(key) {
+                const p = prompt("Digite a nova senha (mínimo 4 dígitos):");
+                if(p && p.length >= 4) {
+                    db.ref('usuarios/' + key).update({ pass: p });
+                    alert("Senha alterada!");
+                }
+            },
+
+            editRole(key, current) {
+                const next = current === 'admin' ? 'user' : 'admin';
+                if(confirm(`Alterar cargo para ${next.toUpperCase()}?`)) {
+                    db.ref('usuarios/' + key).update({ role: next });
+                }
+            },
+
+            renderAdmin() {
+                const container = document.getElementById('lista-users'); if(!container) return;
+                container.innerHTML = Object.entries(this.dados.usuarios).map(([key, u]) => `
+                    <div class="log-row ${u.ativo === false ? 'pendente' : ''}">
+                        <span>
+                            <b>${u.nome}</b> [${u.role.toUpperCase()}]<br>
+                            <small>Login: ${u.login} | Senha: <b>${u.pass}</b> | Status: ${u.ativo ? 'Ativo' : 'BLOQUEADO'}</small>
+                        </span>
+                        <div>
+                            ${u.ativo === false ? `<button class="btn-adm" style="background:var(--verde); color:white" onclick="app.liberarUser('${key}', true)">✅</button>` : `<button class="btn-adm" onclick="app.liberarUser('${key}', false)">🚫</button>`}
+                            <button class="btn-adm" onclick="app.editPass('${key}')">🔑</button>
+                            <button class="btn-adm" onclick="app.editRole('${key}', '${u.role}')">🛡️</button>
+                        </div>
+                    </div>`).join('');
             },
 
             dbSalvar() {
@@ -253,21 +301,11 @@
                 const prot = document.getElementById('ent-prot').value;
                 const venc = document.getElementById('ent-venc').value;
                 if(!cod || !nome) return alert("Preencha Código e Nome.");
-                
                 db.ref('materiais/' + cod).set({ cod, nome, prot, venc });
-                
-                // Grava log com metadados para a aba Movimentação
-                db.ref('logs').push({ 
-                    data: new Date().toLocaleString('pt-BR'), 
-                    user: this.user.nome, 
-                    acao: 'ENTRADA', 
-                    desc: nome,
-                    meta: { cod, prot, venc } 
-                });
-                
+                db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'ENTRADA', desc: nome, meta: { cod, prot, venc } });
                 ['ent-cod','ent-nome','ent-venc'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('ent-prot').value = "";
-                alert("Salvo com sucesso!");
+                alert("Entrada Registrada!");
             },
 
             dbRemover() {
@@ -275,39 +313,28 @@
                 const item = this.dados.materiais[cod];
                 if(item && confirm(`Baixa em: ${item.nome}?`)) {
                     db.ref('materiais/' + cod).remove();
-                    db.ref('logs').push({ 
-                        data: new Date().toLocaleString('pt-BR'), 
-                        user: this.user.nome, 
-                        acao: 'SAÍDA', 
-                        desc: item.nome,
-                        meta: { cod, prot: item.prot, venc: item.venc }
-                    });
+                    db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'SAÍDA', desc: item.nome, meta: { cod, prot: item.prot, venc: item.venc } });
                     document.getElementById('sai-cod').value = "";
-                } else { alert("Código não encontrado."); }
+                } else { alert("Não encontrado."); }
             },
 
             renderMov() {
                 const container = document.getElementById('lista-movimentacao');
-                if(!container) return;
                 const busca = document.getElementById('busca-mov').value.toLowerCase();
-                const logs = Object.values(this.dados.logs).reverse().filter(l => (l.acao === 'ENTRADA' || l.acao === 'SAÍDA') && l.desc.toLowerCase().includes(busca));
+                if(!container) return;
+                const logs = Object.values(this.dados.logs).reverse().filter(l => (l.acao === 'ENTRADA' || l.acao === 'SAÍDA') && (l.desc.toLowerCase().includes(busca) || (l.meta && l.meta.prot.toLowerCase().includes(busca))));
                 
                 container.innerHTML = logs.map(l => {
                     const m = l.meta || {};
-                    const vFmt = m.venc ? m.venc.split('-').reverse().join('/') : '-';
-                    return `
-                    <div class="log-row">
-                        <span>
-                            <span class="badge-mov ${l.acao === 'ENTRADA' ? 'bg-entrada' : 'bg-saida'}">${l.acao}</span> 
-                            <b>${l.desc}</b>
-                            <span class="info-detalhada">
-                                Cód: ${m.cod || '-'} | Prot: ${m.prot || '-'} | Val: ${vFmt} <br>
-                                Responsável: ${l.user}
-                            </span>
-                        </span>
-                        <small style="color:#999">${l.data}</small>
-                    </div>`;
+                    return `<div class="log-row"><span><span class="badge-mov ${l.acao === 'ENTRADA' ? 'bg-entrada' : 'bg-saida'}">${l.acao}</span> <b>${l.desc}</b><span class="info-detalhada">Cód: ${m.cod || '-'} | Prot: ${m.prot || '-'} | Val: ${m.venc ? m.venc.split('-').reverse().join('/') : '-'} <br>Responsável: ${l.user}</span></span><small style="color:#999">${l.data}</small></div>`;
                 }).join('');
+            },
+
+            renderEstoque() {
+                const col = document.getElementById('filtro-coluna').value;
+                const busca = document.getElementById('busca').value.toLowerCase();
+                const corpo = document.getElementById('lista-est');
+                corpo.innerHTML = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca)).map(m => `<tr><td>${m.cod}</td><td style="text-align:left"><b>${m.nome}</b></td><td>${m.prot || '-'}</td><td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td></tr>`).join('');
             },
 
             checkVencimento() {
@@ -319,29 +346,10 @@
                     if(!m.venc) return;
                     const diff = Math.ceil((new Date(m.venc) - hoje) / (1000*60*60*24));
                     const fmt = m.venc.split('-').reverse().join('/');
-                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena"><b>${m.nome}</b><br><small>Venceu em: ${fmt}</small></div>`;
-                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo"><b>${m.nome}</b><br><small>Vence em: ${fmt} (${diff} d)</small></div>`;
+                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena"><b>${m.nome}</b><br><small>Vencido: ${fmt}</small></div>`;
+                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo"><b>${m.nome}</b><br><small>Vence: ${fmt} (${diff} d)</small></div>`;
                 });
                 document.getElementById('count-itens').innerText = Object.keys(this.dados.materiais).length;
-            },
-
-            renderEstoque() {
-                const col = document.getElementById('filtro-coluna').value;
-                const busca = document.getElementById('busca').value.toLowerCase();
-                const corpo = document.getElementById('lista-est');
-                corpo.innerHTML = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca)).map(m => `<tr><td>${m.cod}</td><td style="text-align:left"><b>${m.nome}</b></td><td>${m.prot || '-'}</td><td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td></tr>`).join('');
-            },
-
-            renderLogs() {
-                const container = document.getElementById('lista-logs');
-                if(!container) return;
-                container.innerHTML = Object.values(this.dados.logs).reverse().map(l => `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao}</span></div>`).join('');
-            },
-
-            exportarExcel() {
-                const ws = XLSX.utils.json_to_sheet(Object.values(this.dados.logs).filter(l => l.acao === 'ENTRADA' || l.acao === 'SAÍDA'));
-                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Movimentação");
-                XLSX.writeFile(wb, "Relatorio.xlsx");
             },
 
             nav(v) {
@@ -351,6 +359,17 @@
                 document.getElementById('nav-'+v).classList.add('active');
             },
 
+            renderLogs() {
+                const container = document.getElementById('lista-logs'); if(!container) return;
+                container.innerHTML = Object.values(this.dados.logs).reverse().slice(0,50).map(l => `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao}</span></div>`).join('');
+            },
+
+            exportarExcel() {
+                const ws = XLSX.utils.json_to_sheet(Object.values(this.dados.logs));
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Log");
+                XLSX.writeFile(wb, "Relatorio_v32.xlsx");
+            },
+
             scan(inputId, divId) {
                 const div = document.getElementById(divId); div.style.display = 'block';
                 Quagga.init({ inputStream: { name: "Live", type: "LiveStream", target: div }, decoder: { readers: ["ean_reader", "code_128_reader"] } }, (err) => { if(!err) Quagga.start(); });
@@ -358,13 +377,7 @@
             },
 
             toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); },
-            globalEnter(e) { if(e.key === "Enter") this.login(); },
-            editPass(key) { const p = prompt("Nova senha:"); if(p && p.length >= 4) db.ref('usuarios/' + key).update({ pass: p }); },
-            editRole(key, current) { const next = current === 'admin' ? 'user' : 'admin'; if(confirm("Mudar cargo?")) db.ref('usuarios/' + key).update({ role: next }); },
-            renderAdmin() {
-                const container = document.getElementById('lista-users'); if(!container) return;
-                container.innerHTML = Object.entries(this.dados.usuarios).map(([key, u]) => `<div class="log-row"><span><b>${u.nome}</b> [${u.role.toUpperCase()}]<br><small>Login: ${u.login} | Senha: ${u.pass}</small></span><div><button class="btn-adm" onclick="app.editPass('${key}')">🔑</button><button class="btn-adm" onclick="app.editRole('${key}', '${u.role}')">🛡️</button></div></div>`).join('');
-            }
+            globalEnter(e) { if(e.key === "Enter") this.login(); }
         };
         app.init();
     </script>
