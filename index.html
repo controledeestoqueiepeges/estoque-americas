@@ -57,8 +57,6 @@
         td { padding: 10px; border: 1px solid #eee; font-size: 14px; text-align: center; }
         
         .btn-edit { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--roxo); }
-        .btn-edit:hover { transform: scale(1.2); }
-
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; background: white; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
         
@@ -80,7 +78,6 @@
         .bg-estorno { background: var(--alerta-laranja); }
         .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
         .btn-adm { background: #eee; border: 1px solid #ccc; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .btn-adm:hover { background: #ddd; }
 
         .alert-item { padding: 12px; margin-bottom: 8px; border-radius: 8px; font-size: 13px; border-left: 5px solid; }
         .bg-quarentena { background: #fee2e2; border-color: var(--vermelho); color: #991b1b; }
@@ -278,7 +275,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Login Invisível para regras de segurança [Passo Extra]
+        // Login Invisível para regras de segurança
         firebase.auth().signInAnonymously().catch((error) => {
             console.error("Erro na autenticação anônima:", error.message);
         });
@@ -304,31 +301,46 @@
                 });
             },
 
-            login() {
+            // FUNÇÃO DE LOGIN ATUALIZADA (ASSÍNCRONA)
+            async login() {
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
                 
+                // 1. Caso Master
                 if(u === 'iepeges' && p === 'itc@123@') {
                     this.user = { nome: 'MASTER', login: 'iepeges', role: 'admin', ativo: true };
-                } else {
-                    this.user = Object.values(this.dados.usuarios).find(x => x.login === u && x.pass === p);
+                    this.prosseguirLogin();
+                    return;
                 }
 
-                if(this.user && this.user.ativo !== false) {
-                    // Carrega os dados apenas no momento do login para garantir permissão 
-                    this.init(); 
+                // 2. Busca lista no banco antes de verificar acesso
+                try {
+                    const snapshot = await db.ref('usuarios').once('value');
+                    const usuariosNoBanco = snapshot.val() || {};
+                    
+                    this.user = Object.values(usuariosNoBanco).find(x => x.login === u && x.pass === p);
 
-                    document.getElementById('section-auth').classList.add('hidden');
-                    document.getElementById('layout-sistema').style.display = 'block';
-                    document.getElementById('user-info').innerText = this.user.nome;
-                    if(this.user.role === 'admin') {
-                        document.getElementById('nav-adm').classList.remove('hidden');
-                        document.getElementById('nav-rel').classList.remove('hidden');
+                    if(this.user && this.user.ativo !== false) {
+                        this.prosseguirLogin();
+                    } else { 
+                        alert("Acesso negado. Verifique seu login/senha ou se seu acesso já foi liberado."); 
                     }
-                    this.nav('dash');
-                } else { 
-                    alert("Acesso negado."); 
+                } catch (error) {
+                    alert("Erro ao conectar ao banco de dados. Tente novamente.");
+                    console.error(error);
                 }
+            },
+
+            prosseguirLogin() {
+                this.init(); 
+                document.getElementById('section-auth').classList.add('hidden');
+                document.getElementById('layout-sistema').style.display = 'block';
+                document.getElementById('user-info').innerText = this.user.nome;
+                if(this.user.role === 'admin') {
+                    document.getElementById('nav-adm').classList.remove('hidden');
+                    document.getElementById('nav-rel').classList.remove('hidden');
+                }
+                this.nav('dash');
             },
 
             resetPaginacao() {
@@ -545,9 +557,6 @@
             toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); },
             globalEnter(e) { if(e.key === "Enter") this.login(); }
         };
-
-        // A linha app.init() foi removida daqui para garantir segurança.
-        // O carregamento agora ocorre dentro de app.login().
     </script>
 </body>
 </html>
