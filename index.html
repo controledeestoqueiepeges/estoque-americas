@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROLE DE ESTOQUE | v1.0</title>
+    <title>CONTROLE DE ESTOQUE | v1.1</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
@@ -65,7 +67,11 @@
         
         .btn-excel { background: #1d6f42; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
 
-        /* --- LOGS E USUÁRIOS --- */
+        .paginacao-controles { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; padding: 10px; }
+        .btn-pag { background: var(--roxo); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-pag:disabled { background: #ccc; cursor: not-allowed; }
+        .info-pag { font-size: 14px; font-weight: 600; color: var(--texto); }
+
         .log-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
         .log-row.pendente { background: #fff9db; border-left: 5px solid var(--alerta-laranja); }
         .badge-mov { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; color: white; }
@@ -118,7 +124,6 @@
         <header>
             <div style="display:flex; align-items:center; gap:10px">
                 <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg">
-                <span style="font-weight:bold"> </span>
             </div>
             <div style="display:flex; align-items:center; gap:15px">
                 <small id="user-info" style="font-weight:600"></small>
@@ -159,13 +164,13 @@
                 <div class="card">
                     <h3>Kits Disponíveis em Estoque</h3>
                     <div style="display:flex; gap:10px; margin-bottom:15px">
-                        <select id="filtro-coluna" style="flex:1" onchange="app.renderEstoque()">
+                        <select id="filtro-coluna" style="flex:1" onchange="app.resetPaginacao()">
                             <option value="nome">Nome do Kit</option>
                             <option value="cod">Código</option>
                             <option value="prot">Protocolo</option>
                             <option value="local">Local</option>
                         </select>
-                        <input type="text" id="busca" style="flex:2" placeholder="Filtrar estoque..." onkeyup="app.renderEstoque()">
+                        <input type="text" id="busca" style="flex:2" placeholder="Filtrar estoque..." onkeyup="app.resetPaginacao()">
                     </div>
                     <table>
                         <thead>
@@ -180,6 +185,7 @@
                         </thead>
                         <tbody id="lista-est"></tbody>
                     </table>
+                    <div id="controles-paginacao" class="paginacao-controles"></div>
                 </div>
             </div>
 
@@ -196,31 +202,21 @@
                 <div class="card">
                     <h3 id="titulo-entrada">Entrada de Kit</h3>
                     <p id="aviso-edicao" class="hidden" style="color:var(--alerta-laranja); font-weight:bold">⚠️ MODO EDIÇÃO ATIVADO</p>
-                    
                     <button class="btn-principal" id="btn-scan-ent" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código</button>
                     <div id="s-ent" class="scanner-view"></div>
-                    
-                    <label>Código do Kit</label>
-                    <input type="text" id="ent-cod">
-                    
-                    <label>Nome do Kit</label>
-                    <input type="text" id="ent-nome">
-                    
+                    <label>Código do Kit</label><input type="text" id="ent-cod">
+                    <label>Nome do Kit</label><input type="text" id="ent-nome">
                     <label>Protocolo</label>
                     <select id="ent-prot">
                         <option value="">Selecione...</option>
                         <option value="20230246">20230246</option><option value="2011 (HARMONY)">2011 (HARMONY)</option><option value="AMGEN20230153">AMGEN20230153</option><option value="ARANOTE">ARANOTE</option><option value="ASCENT 7">ASCENT 7</option><option value="ATLAS">ATLAS</option><option value="BLUESTAR">BLUESTAR</option><option value="CA057-001">CA057-001</option><option value="CÂMBRIA 2">CÂMBRIA 2</option><option value="CAMELOT">CAMELOT</option><option value="CELLTRION">CELLTRION</option><option value="CLEE0011012001">CLEE0011012001</option><option value="DREAMM 7">DREAMM 7</option><option value="DS302">DS302</option><option value="ELEGANT">ELEGANT</option><option value="ESCALADE">ESCALADE</option><option value="EVOPAR">EVOPAR</option><option value="EVOPAR 2">EVOPAR 2</option><option value="EXCALIBER">EXCALIBER</option><option value="EXCALIBER MANUTENÇÃO">EXCALIBER MANUTENÇÃO</option><option value="GLOBRYTE">GLOBRYTE</option><option value="IMGN853-0421">IMGN853-0421</option><option value="IRAKLIA">IRAKLIA</option><option value="JPCF">JPCF</option><option value="JZLH">JZLH</option><option value="KER-050-D301">KER-050-D301</option><option value="LINKER">LINKER</option><option value="MAGNETISMM 32">MAGNETISMM 32</option><option value="MAGNETISMM 5">MAGNETISMM 5</option><option value="MAGNITUDE 01">MAGNITUDE 01</option><option value="MAGNITUDE 02">MAGNITUDE 02</option><option value="MAJESTEC 4">MAJESTEC 4</option><option value="MARIGOLD">MARIGOLD</option><option value="MK1084-004">MK1084-004</option><option value="MK-2870-020">MK-2870-020</option><option value="MONUMENTAL 3">MONUMENTAL 3</option><option value="MONUMENTAL 6">MONUMENTAL 6</option><option value="MOUTAINEER 03">MOUTAINEER 03</option><option value="OLYMPIA 01">OLYMPIA 01</option><option value="OLYMPIA 02">OLYMPIA 02</option><option value="OLYMPIA 03">OLYMPIA 03</option><option value="PRISM-MEL">PRISM-MEL</option><option value="REJOICE">REJOICE</option><option value="RYL-2608-102">RYL-2608-102</option><option value="SYMPHONY">SYMPHONY</option><option value="TROPIONLUNG15">TROPIONLUNG15</option><option value="VANTAGE">VANTAGE</option>
                     </select>
-                    
                     <label>Local de Armazenamento</label>
                     <select id="ent-local">
                         <option value="">Selecione...</option>
                         <option value="Armário 1">Armário 1</option><option value="Armário 2">Armário 2</option><option value="Armário 3">Armário 3</option><option value="Armário 4">Armário 4</option><option value="Armário 5">Armário 5</option><option value="Armário 6">Armário 6</option><option value="Armário 7">Armário 7</option><option value="Armário 8">Armário 8</option><option value="Banheiro Antigo">Banheiro Antigo</option><option value="Monitoria 1">Monitoria 1</option><option value="Monitoria 2">Monitoria 2</option><option value="Sala de Reunião 1">Sala de Reunião 1</option><option value="Sala de Reunião 2">Sala de Reunião 2</option>
                     </select>
-                    
-                    <label>Data de Validade</label>
-                    <input type="date" id="ent-venc">
-                    
+                    <label>Data de Validade</label><input type="date" id="ent-venc">
                     <button id="btn-salvar-ent" class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
                     <button id="btn-cancelar-edit" class="btn-principal hidden" style="background:#666; margin-top:10px" onclick="app.limparFormEntrada()">CANCELAR EDIÇÃO</button>
                 </div>
@@ -231,10 +227,7 @@
                     <h3>Saída de Kit</h3>
                     <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear Código</button>
                     <div id="s-sai" class="scanner-view"></div>
-                    
-                    <label>Código do Produto</label>
-                    <input type="text" id="sai-cod">
-                    
+                    <label>Código do Produto</label><input type="text" id="sai-cod">
                     <label>Motivo de Baixa</label>
                     <select id="sai-motivo" onchange="app.validarSaida()">
                         <option value="">Selecione...</option>
@@ -243,10 +236,8 @@
                         <option value="Destruição">Destruição</option>
                         <option value="Devolução">Devolução</option>
                     </select>
-                    
                     <label>Código do Paciente (Obrigatório para Consumo)</label>
                     <input type="text" id="sai-paciente" placeholder="Ex: PAC123" onkeyup="app.validarSaida()">
-                    
                     <button id="btn-confirmar-baixa" class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
                 </div>
             </div>
@@ -256,10 +247,7 @@
                     <h3>Estorno de Material</h3>
                     <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('est-cod', 's-estorno', true)">📷 Escanear para Estorno</button>
                     <div id="s-estorno" class="scanner-view"></div>
-                    
-                    <label>Código do Kit</label>
-                    <input type="text" id="est-cod" placeholder="Escaneie ou digite..." onkeyup="app.buscarEstorno(this.value)">
-                    
+                    <label>Código do Kit</label><input type="text" id="est-cod" placeholder="Escaneie ou digite..." onkeyup="app.buscarEstorno(this.value)">
                     <div id="dados-estorno" class="hidden" style="margin-top:20px; border-top: 1px dashed #ccc; padding-top:20px">
                         <label>Nome do Kit</label><input type="text" id="est-nome" readonly style="background:#f9f9f9">
                         <label>Protocolo</label><input type="text" id="est-prot" readonly style="background:#f9f9f9">
@@ -272,16 +260,9 @@
             </div>
 
             <div id="v-rel" class="view hidden"><div class="card"><h3>Logs do Sistema</h3><div id="lista-logs"></div></div></div>
-            
-            <div id="v-adm" class="view hidden">
-                <div class="card">
-                    <h3>Gestão de Colaboradores</h3>
-                    <div id="lista-users"></div>
-                </div>
-            </div>
+            <div id="v-adm" class="view hidden"><div class="card"><h3>Gestão de Colaboradores</h3><div id="lista-users"></div></div></div>
         </main>
-
-        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.0</footer>
+        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.1</footer>
     </div>
 
     <script>
@@ -297,10 +278,17 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Login Invisível para regras de segurança [Passo Extra]
+        firebase.auth().signInAnonymously().catch((error) => {
+            console.error("Erro na autenticação anônima:", error.message);
+        });
+
         const app = {
             user: null, 
             isEditing: false,
             dados: { materiais: {}, logs: {}, usuarios: {} },
+            paginaAtual: 1,
+            itensPorPagina: 50,
 
             init() {
                 db.ref('/').on('value', (snap) => {
@@ -319,12 +307,17 @@
             login() {
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
+                
                 if(u === 'iepeges' && p === 'itc@123@') {
                     this.user = { nome: 'MASTER', login: 'iepeges', role: 'admin', ativo: true };
                 } else {
                     this.user = Object.values(this.dados.usuarios).find(x => x.login === u && x.pass === p);
                 }
+
                 if(this.user && this.user.ativo !== false) {
+                    // Carrega os dados apenas no momento do login para garantir permissão 
+                    this.init(); 
+
                     document.getElementById('section-auth').classList.add('hidden');
                     document.getElementById('layout-sistema').style.display = 'block';
                     document.getElementById('user-info').innerText = this.user.nome;
@@ -333,7 +326,54 @@
                         document.getElementById('nav-rel').classList.remove('hidden');
                     }
                     this.nav('dash');
-                } else { alert("Acesso negado."); }
+                } else { 
+                    alert("Acesso negado."); 
+                }
+            },
+
+            resetPaginacao() {
+                this.paginaAtual = 1;
+                this.renderEstoque();
+            },
+
+            mudarPagina(delta) {
+                this.paginaAtual += delta;
+                this.renderEstoque();
+                window.scrollTo(0, 0); 
+            },
+
+            renderEstoque() {
+                const col = document.getElementById('filtro-coluna').value;
+                const busca = document.getElementById('busca').value.toLowerCase();
+                const corpo = document.getElementById('lista-est');
+                const pagContainer = document.getElementById('controles-paginacao');
+                if(!corpo) return;
+
+                const todosFiltrados = Object.values(this.dados.materiais).filter(m => 
+                    (m[col] || "").toLowerCase().includes(busca)
+                );
+
+                const totalPaginas = Math.ceil(todosFiltrados.length / this.itensPorPagina) || 1;
+                if(this.paginaAtual > totalPaginas) this.paginaAtual = totalPaginas;
+
+                const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+                const dadosPagina = todosFiltrados.slice(inicio, inicio + this.itensPorPagina);
+
+                corpo.innerHTML = dadosPagina.map(m => `
+                    <tr>
+                        <td>${m.cod}</td>
+                        <td style="text-align:left"><b>${m.nome}</b></td>
+                        <td>${m.prot || '-'}</td>
+                        <td>${m.local || '-'}</td>
+                        <td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td>
+                        <td><button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button></td>
+                    </tr>`).join('');
+
+                pagContainer.innerHTML = `
+                    <button class="btn-pag" onclick="app.mudarPagina(-1)" ${this.paginaAtual === 1 ? 'disabled' : ''}>⬅️ Anterior</button>
+                    <span class="info-pag">Página ${this.paginaAtual} de ${totalPaginas}</span>
+                    <button class="btn-pag" onclick="app.mudarPagina(1)" ${this.paginaAtual === totalPaginas ? 'disabled' : ''}>Próxima ➡️</button>
+                `;
             },
 
             cadastrar() {
@@ -357,9 +397,7 @@
                 document.getElementById('btn-cancelar-edit').classList.remove('hidden');
                 document.getElementById('btn-scan-ent').classList.add('hidden');
                 const ic = document.getElementById('ent-cod');
-                ic.value = item.cod;
-                ic.readOnly = true;
-                ic.style.background = "#eee"; 
+                ic.value = item.cod; ic.readOnly = true; ic.style.background = "#eee"; 
                 document.getElementById('ent-nome').value = item.nome;
                 document.getElementById('ent-prot').value = item.prot || "";
                 document.getElementById('ent-local').value = item.local || "";
@@ -389,8 +427,7 @@
                 const acao = this.isEditing ? 'EDIÇÃO' : 'ENTRADA';
                 db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local });
                 db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao, desc: nome, meta: { cod, prot, venc, local } });
-                alert("Sucesso!");
-                this.limparFormEntrada();
+                alert("Sucesso!"); this.limparFormEntrada();
             },
 
             validarSaida() {
@@ -408,9 +445,7 @@
                 if(!item || !mot) return alert("Dados incompletos.");
                 db.ref('materiais/' + cod).remove();
                 db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'SAÍDA', desc: item.nome, meta: { cod, prot: item.prot, venc: item.venc, mot, pac } });
-                document.getElementById('sai-cod').value = "";
-                document.getElementById('sai-paciente').value = "";
-                alert("Baixa realizada.");
+                document.getElementById('sai-cod').value = ""; document.getElementById('sai-paciente').value = ""; alert("Baixa realizada.");
             },
 
             buscarEstorno(cod) {
@@ -433,24 +468,7 @@
                 db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local: "ESTORNO" });
                 db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'ESTORNO', desc: nome, meta: { cod, prot, venc, mot_estorno: mot } });
                 alert("Estornado!");
-                document.getElementById('est-cod').value = "";
-                document.getElementById('est-motivo').value = "";
-                document.getElementById('dados-estorno').classList.add('hidden');
-            },
-
-            renderEstoque() {
-                const col = document.getElementById('filtro-coluna').value;
-                const busca = document.getElementById('busca').value.toLowerCase();
-                const corpo = document.getElementById('lista-est');
-                corpo.innerHTML = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca)).map(m => `
-                    <tr>
-                        <td>${m.cod}</td>
-                        <td style="text-align:left"><b>${m.nome}</b></td>
-                        <td>${m.prot || '-'}</td>
-                        <td>${m.local || '-'}</td>
-                        <td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td>
-                        <td><button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button></td>
-                    </tr>`).join('');
+                document.getElementById('est-cod').value = ""; document.getElementById('est-motivo').value = ""; document.getElementById('dados-estorno').classList.add('hidden');
             },
 
             renderMov() {
@@ -473,21 +491,14 @@
                 container.innerHTML = Object.values(this.dados.logs).reverse().slice(0,50).map(l => `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span></div>`).join('');
             },
 
-            /* --- GESTÃO DE USUÁRIOS RESTAURADA --- */
             renderAdmin() {
                 const container = document.getElementById('lista-users');
                 if(!container) return;
                 container.innerHTML = Object.entries(this.dados.usuarios).map(([key, u]) => `
                     <div class="log-row ${u.ativo === false ? 'pendente' : ''}">
-                        <span>
-                            <b>${u.nome}</b> [${u.role.toUpperCase()}]<br>
-                            <small>Login: ${u.login} | Senha: <b>${u.pass}</b> | Status: ${u.ativo ? 'Ativo' : 'BLOQUEADO'}</small>
-                        </span>
+                        <span><b>${u.nome}</b> [${u.role.toUpperCase()}]<br><small>Login: ${u.login} | Senha: <b>${u.pass}</b> | Status: ${u.ativo ? 'Ativo' : 'BLOQUEADO'}</small></span>
                         <div style="display:flex; gap:5px">
-                            ${u.ativo === false ? 
-                                `<button class="btn-adm" style="background:var(--verde); color:white" onclick="app.liberarUser('${key}', true)">✅ Aprovar</button>` : 
-                                `<button class="btn-adm" onclick="app.liberarUser('${key}', false)">🚫 Bloquear</button>`
-                            }
+                            ${u.ativo === false ? `<button class="btn-adm" style="background:var(--verde); color:white" onclick="app.liberarUser('${key}', true)">✅ Aprovar</button>` : `<button class="btn-adm" onclick="app.liberarUser('${key}', false)">🚫 Bloquear</button>`}
                             <button class="btn-adm" onclick="app.editPass('${key}')">🔑 Senha</button>
                             <button class="btn-adm" onclick="app.editRole('${key}', '${u.role}')">🛡️ Cargo</button>
                         </div>
@@ -505,13 +516,10 @@
             },
 
             scan(inputId, divId, isEstorno = false) {
-                const div = document.getElementById(divId); div.style.display = 'block';
+                const div = document.getElementById(divId);
+                div.style.display = 'block';
                 Quagga.init({ inputStream: { target: div, constraints: { facingMode: "environment" } }, decoder: { readers: ["code_128_reader"] } }, (err) => { if(!err) Quagga.start(); });
-                Quagga.onDetected((r) => { 
-                    document.getElementById(inputId).value = r.codeResult.code; 
-                    if(isEstorno) this.buscarEstorno(r.codeResult.code);
-                    Quagga.stop(); div.style.display = 'none'; 
-                });
+                Quagga.onDetected((r) => { document.getElementById(inputId).value = r.codeResult.code; if(isEstorno) this.buscarEstorno(r.codeResult.code); Quagga.stop(); div.style.display = 'none'; });
             },
 
             checkVencimento() {
@@ -537,7 +545,9 @@
             toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); },
             globalEnter(e) { if(e.key === "Enter") this.login(); }
         };
-        app.init();
+
+        // A linha app.init() foi removida daqui para garantir segurança.
+        // O carregamento agora ocorre dentro de app.login().
     </script>
 </body>
 </html>
