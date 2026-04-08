@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROLE DE ESTOQUE | v1.1</title>
+    <title>CONTROLE DE ESTOQUE | v1.2</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -259,7 +259,7 @@
             <div id="v-rel" class="view hidden"><div class="card"><h3>Logs do Sistema</h3><div id="lista-logs"></div></div></div>
             <div id="v-adm" class="view hidden"><div class="card"><h3>Gestão de Colaboradores</h3><div id="lista-users"></div></div></div>
         </main>
-        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.1</footer>
+        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.2</footer>
     </div>
 
     <script>
@@ -275,7 +275,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Login Invisível para regras de segurança
         firebase.auth().signInAnonymously().catch((error) => {
             console.error("Erro na autenticação anônima:", error.message);
         });
@@ -301,29 +300,22 @@
                 });
             },
 
-            // FUNÇÃO DE LOGIN ATUALIZADA (ASSÍNCRONA)
             async login() {
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
-                
-                // 1. Caso Master
                 if(u === 'iepeges' && p === 'itc@123@') {
                     this.user = { nome: 'MASTER', login: 'iepeges', role: 'admin', ativo: true };
                     this.prosseguirLogin();
                     return;
                 }
-
-                // 2. Busca lista no banco antes de verificar acesso
                 try {
                     const snapshot = await db.ref('usuarios').once('value');
                     const usuariosNoBanco = snapshot.val() || {};
-                    
                     this.user = Object.values(usuariosNoBanco).find(x => x.login === u && x.pass === p);
-
                     if(this.user && this.user.ativo !== false) {
                         this.prosseguirLogin();
                     } else { 
-                        alert("Acesso negado. Verifique seu login/senha ou se seu acesso já foi liberado."); 
+                        alert("Acesso negado. Verifique seu login/senha ou se seu acesso já foi liberado.");
                     }
                 } catch (error) {
                     alert("Erro ao conectar ao banco de dados. Tente novamente.");
@@ -332,7 +324,7 @@
             },
 
             prosseguirLogin() {
-                this.init(); 
+                this.init();
                 document.getElementById('section-auth').classList.add('hidden');
                 document.getElementById('layout-sistema').style.display = 'block';
                 document.getElementById('user-info').innerText = this.user.nome;
@@ -360,17 +352,13 @@
                 const corpo = document.getElementById('lista-est');
                 const pagContainer = document.getElementById('controles-paginacao');
                 if(!corpo) return;
-
                 const todosFiltrados = Object.values(this.dados.materiais).filter(m => 
                     (m[col] || "").toLowerCase().includes(busca)
                 );
-
                 const totalPaginas = Math.ceil(todosFiltrados.length / this.itensPorPagina) || 1;
                 if(this.paginaAtual > totalPaginas) this.paginaAtual = totalPaginas;
-
                 const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
                 const dadosPagina = todosFiltrados.slice(inicio, inicio + this.itensPorPagina);
-
                 corpo.innerHTML = dadosPagina.map(m => `
                     <tr>
                         <td>${m.cod}</td>
@@ -380,7 +368,6 @@
                         <td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td>
                         <td><button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button></td>
                     </tr>`).join('');
-
                 pagContainer.innerHTML = `
                     <button class="btn-pag" onclick="app.mudarPagina(-1)" ${this.paginaAtual === 1 ? 'disabled' : ''}>⬅️ Anterior</button>
                     <span class="info-pag">Página ${this.paginaAtual} de ${totalPaginas}</span>
@@ -435,11 +422,31 @@
                 const prot = document.getElementById('ent-prot').value;
                 const local = document.getElementById('ent-local').value;
                 const venc = document.getElementById('ent-venc').value;
+                
                 if(!cod || !nome) return alert("Preencha Código e Nome.");
+
+                // REGRA DE OURO: Bloqueio de duplicados
+                // Se não estamos editando e o código já existe na lista filtrada do banco
+                if (!this.isEditing && this.dados.materiais[cod]) {
+                    alert("⚠️ ERRO: Este código de kit já existe no estoque!\n\nCaso precise alterar um kit que já está na prateleira, use o ícone de edição (✏️) na aba 'Estoque Atual'.");
+                    return; 
+                }
+
                 const acao = this.isEditing ? 'EDIÇÃO' : 'ENTRADA';
-                db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local });
-                db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao, desc: nome, meta: { cod, prot, venc, local } });
-                alert("Sucesso!"); this.limparFormEntrada();
+                
+                db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local })
+                    .then(() => {
+                        db.ref('logs').push({ 
+                            data: new Date().toLocaleString('pt-BR'), 
+                            user: this.user.nome, 
+                            acao, 
+                            desc: nome, 
+                            meta: { cod, prot, venc, local } 
+                        });
+                        alert("Sucesso!"); 
+                        this.limparFormEntrada();
+                    })
+                    .catch(e => alert("Erro ao salvar: " + e.message));
             },
 
             validarSaida() {
@@ -467,7 +474,9 @@
                     document.getElementById('est-nome').value = log.desc;
                     document.getElementById('est-prot').value = log.meta.prot || "-";
                     document.getElementById('est-venc').value = log.meta.venc || "-";
-                } else { document.getElementById('dados-estorno').classList.add('hidden'); }
+                } else { 
+                    document.getElementById('dados-estorno').classList.add('hidden');
+                }
             },
 
             dbEstornar() {
