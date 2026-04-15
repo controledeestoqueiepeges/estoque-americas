@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
+<!DOCTYPE html><html lang="pt-br"><head manus-helper-ready="true">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROLE DE ESTOQUE | v1.2</title>
+    <title>CONTROLE DE ESTOQUE | v1.3</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -13,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root {
+       :root {
             --premium-bg: #f5f5f7;
             --premium-accent: #5a189a;
             --premium-card: #ffffff;
@@ -28,24 +26,28 @@
             --vermelho: #e63946;
             --texto: #374151;
             --alerta-laranja: #f39c12;
+            --azul-principal: #5a189a;
+            --branco: #FFFFFF;
         }
 
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--cinza-fundo); color: var(--texto); overflow-x: hidden; }
 
         /* --- LOGIN --- */
-        .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--premium-bg); }
+        .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--cinza-fundo); }
         .auth-card { background: var(--premium-card); width: 100%; max-width: 400px; padding: 40px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); text-align: center; }
-        .auth-card img { width: 180px; margin-bottom: 30px; }
+        .auth-card img { width: 220px; margin-bottom: 25px; border-radius: 8px; }
         .auth-card h3 { font-size: 24px; font-weight: 600; color: var(--premium-text); margin-bottom: 25px; }
         .auth-card label { display: block; text-align: left; font-size: 11px; font-weight: 700; color: var(--premium-gray); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px; }
         .auth-card input { width: 100%; padding: 14px; background: #f9f9fb; border: 1px solid #e5e5e7; border-radius: 12px; margin-bottom: 18px; font-size: 16px; outline: none; transition: 0.2s; }
+        .auth-card input::placeholder { color: var(--premium-gray); }
         .btn-premium { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--premium-accent); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-premium:hover { background: #f0f0f0; transform: translateY(-2px); }
 
-        /* --- LAYOUT --- */
+        /* --- SISTEMA --- */
         #layout-sistema { display: none; min-height: 100vh; padding-bottom: 60px; }
         header { background: var(--escuro); color: white; height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; }
-        header img { height: 28px; filter: brightness(0) invert(1); }
+        header img { height: 40px; border-radius: 4px; }
         .sidebar { position: fixed; top: 65px; left: 0; bottom: 0; width: 240px; background: #22163f; padding: 20px; overflow-y: auto; }
         .nav-btn { background: transparent; border: none; color: #cbb2ff; padding: 12px; text-align: left; border-radius: 8px; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         .nav-btn.active { background: var(--roxo); color: white; }
@@ -53,10 +55,10 @@
         .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th { background: #f9f9f9; padding: 12px; font-size: 13px; color: var(--escuro); text-transform: uppercase; border: 1px solid #eee; }
-        td { padding: 10px; border: 1px solid #eee; font-size: 14px; text-align: center; }
+        th { background: #f8f9fa; padding: 12px; font-size: 13px; color: var(--escuro); text-transform: uppercase; border: 1px solid #dee2e6; }
+        td { padding: 10px; border: 1px solid #dee2e6; font-size: 14px; text-align: center; }
         
-        .btn-edit { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--roxo); }
+        .btn-edit { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--azul-principal); }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; background: white; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
         
@@ -64,7 +66,6 @@
         .btn-principal:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6; }
         
         .btn-excel { background: #1d6f42; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
-
         .paginacao-controles { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; padding: 10px; }
         .btn-pag { background: var(--roxo); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-pag:disabled { background: #ccc; cursor: not-allowed; }
@@ -79,27 +80,41 @@
         .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
         .btn-adm { background: #eee; border: 1px solid #ccc; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; }
 
-        .alert-item { padding: 12px; margin-bottom: 8px; border-radius: 8px; font-size: 13px; border-left: 5px solid; }
+        .alert-item { padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px; border-left: 5px solid; line-height: 1.4; text-align: left; cursor: pointer; transition: transform 0.2s; }
+        .alert-item:hover { transform: scale(1.02); opacity: 0.9; }
         .bg-quarentena { background: #fee2e2; border-color: var(--vermelho); color: #991b1b; }
         .bg-vencendo { background: #fef3c7; border-color: var(--alerta-laranja); color: #92400e; }
         
+        /* Dashboard Protocolos */
+        .protocol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .protocol-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 15px; text-align: center; transition: 0.3s; }
+        .protocol-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: var(--roxo); }
+        .protocol-card h4 { margin: 0; font-size: 14px; color: var(--escuro); }
+        .protocol-card .count { font-size: 24px; font-weight: bold; color: var(--roxo); margin-top: 5px; }
+
         .hidden { display: none !important; }
         .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); overflow: hidden; }
         
+        /* Baixa em Massa */
+        .massa-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .massa-row input { margin-bottom: 0; flex-grow: 1; }
+        .btn-scan-mini { background: var(--roxo); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
+        .btn-add-item { background: #636e72; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--escuro); color: #cbb2ff; text-align: center; padding: 10px; font-size: 12px; z-index: 1001; }
 
         @media (max-width: 768px) { .sidebar { width: 60px; } .nav-btn span { display: none; } main { margin-left: 60px; } }
     </style>
 </head>
-<body onkeydown="app.globalEnter(event)">
+<body>
 
     <section id="section-auth" class="auth-screen">
         <div id="card-login" class="auth-card">
             <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
             <label>Usuário</label>
-            <input type="text" id="login-user" placeholder="Digite seu login">
+            <input type="text" id="login-user" placeholder="Digite seu login" onkeydown="if(event.key==='Enter') app.login()">
             <label>Senha</label>
-            <input type="password" id="login-pass" placeholder="••••••••">
+            <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') app.login()">
             <button class="btn-premium" onclick="app.login()">ACESSAR</button>
             <p style="margin-top:20px; font-size:14px; color:var(--premium-gray)">
                 Novo por aqui? <a href="#" onclick="app.toggleAuth()" style="color:var(--premium-accent); font-weight:600; text-decoration:none">Solicitar Acesso</a>
@@ -109,7 +124,7 @@
         <div id="card-cad" class="auth-card hidden">
             <h3>Solicitar Acesso</h3>
             <label>Nome Completo</label>
-            <input type="text" id="cad-nome" placeholder="Ex: Milton Rangel">
+            <input type="text" id="cad-nome" placeholder="Nome Completo">
             <label>Senha</label>
             <input type="password" id="cad-pass" placeholder="Mínimo 4 dígitos" maxlength="8">
             <button class="btn-premium" onclick="app.cadastrar()">ENVIAR SOLICITAÇÃO</button>
@@ -119,56 +134,58 @@
 
     <div id="layout-sistema">
         <header>
-            <div style="display:flex; align-items:center; gap:10px">
-                <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
             </div>
-            <div style="display:flex; align-items:center; gap:15px">
+            <div style="display: flex; align-items: center; gap: 20px;">
                 <small id="user-info" style="font-weight:600"></small>
                 <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:4px 8px; border-radius:4px; cursor:pointer">Sair</button>
             </div>
         </header>
 
         <aside class="sidebar">
-            <button id="nav-dash" class="nav-btn active" onclick="app.nav('dash')">🏠 <span>Início</span></button>
-            <button id="nav-est" class="nav-btn" onclick="app.nav('est')">🔍 <span>Estoque Atual</span></button>
-            <button id="nav-mov" class="nav-btn" onclick="app.nav('mov')">🔄 <span>Movimentação</span></button>
-            <button id="nav-ent" class="nav-btn" onclick="app.nav('ent')">📥 <span>Entrada</span></button>
-            <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')">📤 <span>Saída</span></button>
-            <button id="nav-estorno" class="nav-btn" onclick="app.nav('estorno')">⏪ <span>Estorno</span></button>
-            <button id="nav-rel" class="nav-btn hidden" onclick="app.nav('rel')">📋 <span>Logs Sistema</span></button>
-            <button id="nav-adm" class="nav-btn hidden" onclick="app.nav('adm')">⚙️ <span>Gestão Usuários</span></button>
+            <button id="nav-dash" class="nav-btn active" onclick="app.nav('dash')">📊 <span>Dashboard</span></button>
+            <button id="nav-ent" class="nav-btn" onclick="app.nav('ent')">📥 <span>Entrada de Kit</span></button>
+            <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')">📤 <span>Saída de Kit</span></button>
+            <button id="nav-massa" class="nav-btn" onclick="app.nav('massa')">📦 <span>Baixa em Massa</span></button>
+            <button id="nav-est" class="nav-btn" onclick="app.nav('est')">🔄 <span>Estorno</span></button>
+            <button id="nav-mov" class="nav-btn" onclick="app.nav('mov')">📑 <span>Movimentação</span></button>
+            <button id="nav-rel" class="nav-btn hidden" onclick="app.nav('rel')">📜 <span>Logs</span></button>
+            <button id="nav-adm" class="nav-btn hidden" onclick="app.nav('adm')">👥 <span>Colaboradores</span></button>
         </aside>
 
         <main>
             <div id="v-dash" class="view">
-                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div class="card" style="flex:1; min-width:300px">
-                        <div style="color:var(--vermelho); font-weight:bold; margin-bottom:10px">🛑 Quarentena (Vencidos)</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:20px">
+                    <div class="card" style="border-left: 5px solid var(--vermelho)">
+                        <small>Itens Vencidos</small>
                         <div id="lista-quarentena"></div>
                     </div>
-                    <div class="card" style="flex:1; min-width:300px">
-                        <div style="color:var(--alerta-laranja); font-weight:bold; margin-bottom:10px">⚠️ Vencendo (45 dias)</div>
+                    <div class="card" style="border-left: 5px solid var(--alerta-laranja)">
+                        <small>Vencendo (45 dias)</small>
                         <div id="lista-vencendo"></div>
                     </div>
                 </div>
-                <div class="card" style="text-align:center">
-                    <h1 id="count-itens" style="margin:0; color:var(--roxo)">0</h1>
-                    <p style="margin:0; color:gray">Total de Kits em estoque</p>
-                </div>
-            </div>
 
-            <div id="v-est" class="view hidden">
                 <div class="card">
-                    <h3>Kits Disponíveis em Estoque</h3>
-                    <div style="display:flex; gap:10px; margin-bottom:15px">
-                        <select id="filtro-coluna" style="flex:1" onchange="app.resetPaginacao()">
-                            <option value="nome">Nome do Kit</option>
-                            <option value="cod">Código</option>
-                            <option value="prot">Protocolo</option>
-                            <option value="local">Local</option>
-                        </select>
-                        <input type="text" id="busca" style="flex:2" placeholder="Filtrar estoque..." onkeyup="app.resetPaginacao()">
+                    <h3>Resumo por Protocolo</h3>
+                    <div id="lista-protocolos" class="protocol-grid"></div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px">
+                        <h3>Estoque Atual</h3>
+                        <div style="display:flex; gap:10px">
+                            <select id="filtro-coluna" onchange="app.resetPaginacao()" style="width:120px; margin-bottom:0">
+                                <option value="nome">Nome</option>
+                                <option value="cod">Código</option>
+                                <option value="prot">Protocolo</option>
+                                <option value="local">Local</option>
+                            </select>
+                            <input type="text" id="busca" placeholder="Pesquisar..." onkeyup="app.resetPaginacao()" style="width:180px; margin-bottom:0">
+                        </div>
                     </div>
+                    
                     <table>
                         <thead>
                             <tr>
@@ -182,49 +199,76 @@
                         </thead>
                         <tbody id="lista-est"></tbody>
                     </table>
-                    <div id="controles-paginacao" class="paginacao-controles"></div>
-                </div>
-            </div>
-
-            <div id="v-mov" class="view hidden">
-                <div class="card">
-                    <h3>Movimentação Completa</h3>
-                    <button class="btn-excel" onclick="app.exportarExcel()">📗 Exportar Relatório</button>
-                    <input type="text" id="busca-mov" placeholder="Buscar por Kit ou Protocolo..." onkeyup="app.renderMov()">
-                    <div id="lista-movimentacao"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <div id="controles-paginacao" class="paginacao-controles" style="margin-top: 0;"></div>
+                        <div style="background: var(--roxo); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                            Total em Estoque: <span id="count-itens">0</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="v-ent" class="view hidden">
                 <div class="card">
                     <h3 id="titulo-entrada">Entrada de Kit</h3>
-                    <p id="aviso-edicao" class="hidden" style="color:var(--alerta-laranja); font-weight:bold">⚠️ MODO EDIÇÃO ATIVADO</p>
-                    <button class="btn-principal" id="btn-scan-ent" style="background:#444; margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código</button>
+                    <div id="aviso-edicao" class="hidden" style="background:#fff3cd; color:#856404; padding:10px; border-radius:8px; margin-bottom:15px; font-size:14px">
+                        ⚠️ Você está no modo de edição. O código do kit não pode ser alterado.
+                    </div>
+                    <button id="btn-scan-ent" class="btn-principal" style="background:var(--roxo); margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código de Barras</button>
                     <div id="s-ent" class="scanner-view"></div>
-                    <label>Código do Kit</label><input type="text" id="ent-cod">
-                    <label>Nome do Kit</label><input type="text" id="ent-nome">
+                    
+                    <label>Código do Kit</label><input type="text" id="ent-cod" placeholder="Digite ou escaneie" onkeydown="if(event.key==='Enter') app.dbSalvar()">
+                    <label>Nome do Kit</label><input type="text" id="ent-nome" placeholder="Ex: Kit Cirúrgico A" onkeydown="if(event.key==='Enter') app.dbSalvar()">
+                    
                     <label>Protocolo</label>
                     <select id="ent-prot">
-                        <option value="">Selecione...</option>
-                        <option value="20230246">20230246</option><option value="2011 (HARMONY)">2011 (HARMONY)</option><option value="AMGEN20230153">AMGEN20230153</option><option value="ARANOTE">ARANOTE</option><option value="ASCENT 7">ASCENT 7</option><option value="ATLAS">ATLAS</option><option value="BLUESTAR">BLUESTAR</option><option value="CA057-001">CA057-001</option><option value="CÂMBRIA 2">CÂMBRIA 2</option><option value="CAMELOT">CAMELOT</option><option value="CELLTRION">CELLTRION</option><option value="CLEE0011012001">CLEE0011012001</option><option value="DREAMM 7">DREAMM 7</option><option value="DS302">DS302</option><option value="ELEGANT">ELEGANT</option><option value="ESCALADE">ESCALADE</option><option value="EVOPAR">EVOPAR</option><option value="EVOPAR 2">EVOPAR 2</option><option value="EXCALIBER">EXCALIBER</option><option value="EXCALIBER MANUTENÇÃO">EXCALIBER MANUTENÇÃO</option><option value="GLOBRYTE">GLOBRYTE</option><option value="IMGN853-0421">IMGN853-0421</option><option value="IRAKLIA">IRAKLIA</option><option value="JPCF">JPCF</option><option value="JZLH">JZLH</option><option value="KER-050-D301">KER-050-D301</option><option value="LINKER">LINKER</option><option value="MAGNETISMM 32">MAGNETISMM 32</option><option value="MAGNETISMM 5">MAGNETISMM 5</option><option value="MAGNITUDE 01">MAGNITUDE 01</option><option value="MAGNITUDE 02">MAGNITUDE 02</option><option value="MAJESTEC 4">MAJESTEC 4</option><option value="MARIGOLD">MARIGOLD</option><option value="MK1084-004">MK1084-004</option><option value="MK-2870-020">MK-2870-020</option><option value="MONUMENTAL 3">MONUMENTAL 3</option><option value="MONUMENTAL 6">MONUMENTAL 6</option><option value="MOUTAINEER 03">MOUTAINEER 03</option><option value="OLYMPIA 01">OLYMPIA 01</option><option value="OLYMPIA 02">OLYMPIA 02</option><option value="OLYMPIA 03">OLYMPIA 03</option><option value="PRISM-MEL">PRISM-MEL</option><option value="REJOICE">REJOICE</option><option value="RYL-2608-102">RYL-2608-102</option><option value="SYMPHONY">SYMPHONY</option><option value="TROPIONLUNG15">TROPIONLUNG15</option><option value="VANTAGE">VANTAGE</option>
+                        <option value="">Selecione o Protocolo...</option>
+                        <option value="CAMBRIA">CAMBRIA</option>
+                        <option value="CA127-1030 -TRIDENT">CA127-1030 -TRIDENT</option>
+                        <option value="CA-224-127">CA-224-127</option>
+                        <option value="JZQB">JZQB</option>
+                        <option value="MK1022-016">MK1022-016</option>
+                        <option value="Mk1026-003">Mk1026-003</option>
+                        <option value="MK1026-008">MK1026-008</option>
+                        <option value="MK1026-011">MK1026-011</option>
+                        <option value="MK2140-006">MK2140-006</option>
+                        <option value="Mk2140-010">Mk2140-010</option>
+                        <option value="MK2870-004">MK2870-004</option>
+                        <option value="MK2870-020">MK2870-020</option>
+                        <option value="MK2870-022">MK2870-022</option>
+                        <option value="MK2870-023">MK2870-023</option>
+                        <option value="MK5684-004">MK5684-004</option>
+                        <option value="MK6482-011">MK6482-011</option>
                     </select>
-                    <label>Local de Armazenamento</label>
+                    
+                    <label>Localização</label>
                     <select id="ent-local">
-                        <option value="">Selecione...</option>
-                        <option value="Armário 1">Armário 1</option><option value="Armário 2">Armário 2</option><option value="Armário 3">Armário 3</option><option value="Armário 4">Armário 4</option><option value="Armário 5">Armário 5</option><option value="Armário 6">Armário 6</option><option value="Armário 7">Armário 7</option><option value="Armário 8">Armário 8</option><option value="Banheiro Antigo">Banheiro Antigo</option><option value="Monitoria 1">Monitoria 1</option><option value="Monitoria 2">Monitoria 2</option><option value="Sala de Reunião 1">Sala de Reunião 1</option><option value="Sala de Reunião 2">Sala de Reunião 2</option>
+                        <option value="">Selecione o Local...</option>
+                        <option value="ARMÁRIO 24">ARMÁRIO 24</option>
+                        <option value="ARMÁRIO 25">ARMÁRIO 25</option>
+                        <option value="ARMÁRIO 26">ARMÁRIO 26</option>
+                        <option value="ARMÁRIO 27">ARMÁRIO 27</option>
+                        <option value="ARMÁRIO 28">ARMÁRIO 28</option>
+                        <option value="ARMÁRIO 29">ARMÁRIO 29</option>
+                        <option value="ARMÁRIO 34">ARMÁRIO 34</option>
+                        <option value="ARMÁRIO 35">ARMÁRIO 35</option>
                     </select>
-                    <label>Data de Validade</label><input type="date" id="ent-venc">
-                    <button id="btn-salvar-ent" class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
-                    <button id="btn-cancelar-edit" class="btn-principal hidden" style="background:#666; margin-top:10px" onclick="app.limparFormEntrada()">CANCELAR EDIÇÃO</button>
+                    
+                    <label>Data de Validade</label><input type="date" id="ent-venc" onkeydown="if(event.key==='Enter') app.dbSalvar()">
+                    
+                    <div style="display:flex; gap:10px">
+                        <button id="btn-salvar-ent" class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
+                        <button id="btn-cancelar-edit" class="btn-principal hidden" style="background:#666" onclick="app.limparFormEntrada()">CANCELAR</button>
+                    </div>
                 </div>
             </div>
 
             <div id="v-sai" class="view hidden">
                 <div class="card">
-                    <h3>Saída de Kit</h3>
-                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear Código</button>
+                    <h3>Saída de Material (Baixa)</h3>
+                    <button class="btn-principal" style="background:var(--vermelho); margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear para Baixa</button>
                     <div id="s-sai" class="scanner-view"></div>
-                    <label>Código do Produto</label><input type="text" id="sai-cod">
+                    <label>Código do Kit</label><input type="text" id="sai-cod" placeholder="Escaneie ou digite..." onkeydown="if(event.key==='Enter') app.dbRemover()">
                     <label>Motivo de Baixa</label>
                     <select id="sai-motivo" onchange="app.validarSaida()">
                         <option value="">Selecione...</option>
@@ -234,41 +278,75 @@
                         <option value="Devolução">Devolução</option>
                     </select>
                     <label>Código do Paciente (Obrigatório para Consumo)</label>
-                    <input type="text" id="sai-paciente" placeholder="Ex: PAC123" onkeyup="app.validarSaida()">
+                    <input type="text" id="sai-paciente" placeholder="Ex: PAC123" onkeyup="app.validarSaida()" onkeydown="if(event.key==='Enter') app.dbRemover()">
                     <button id="btn-confirmar-baixa" class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
                 </div>
             </div>
 
-            <div id="v-estorno" class="view hidden">
+            <div id="v-massa" class="view hidden">
+                <div class="card">
+                    <h3>Baixa em Massa (Lote)</h3>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Escaneie ou digite os códigos. O motivo selecionado será aplicado a todos.</p>
+                    
+                    <div id="s-massa" class="scanner-view"></div>
+
+                    <label>Motivo da Baixa (Lote)</label>
+                    <select id="massa-motivo">
+                        <option value="">Selecione o motivo...</option>
+                        <option value="Quarentena">Quarentena</option>
+                        <option value="Destruição">Destruição</option>
+                        <option value="Devolução">Devolução</option>
+                    </select>
+
+                    <div id="massa-lista-inputs" style="margin-top: 15px;"></div>
+
+                    <button id="btn-add-massa" class="btn-add-item" onclick="app.addInputMassa()">➕ Adicionar Item</button>
+
+                    <button class="btn-principal" style="background:var(--vermelho); margin-top:20px" onclick="app.processarBaixaMassa()">CONFIRMAR BAIXA EM MASSA</button>
+                </div>
+            </div>
+
+            <div id="v-est" class="view hidden">
                 <div class="card">
                     <h3>Estorno de Material</h3>
                     <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('est-cod', 's-estorno', true)">📷 Escanear para Estorno</button>
                     <div id="s-estorno" class="scanner-view"></div>
-                    <label>Código do Kit</label><input type="text" id="est-cod" placeholder="Escaneie ou digite..." onkeyup="app.buscarEstorno(this.value)">
+                    <label>Código do Kit</label><input type="text" id="est-cod" placeholder="Escaneie ou digite..." onkeydown="if(event.key==='Enter') app.buscarEstorno(this.value)">
                     <div id="dados-estorno" class="hidden" style="margin-top:20px; border-top: 1px dashed #ccc; padding-top:20px">
-                        <label>Nome do Kit</label><input type="text" id="est-nome" readonly style="background:#f9f9f9">
-                        <label>Protocolo</label><input type="text" id="est-prot" readonly style="background:#f9f9f9">
-                        <label>Data de Validade</label><input type="text" id="est-venc" readonly style="background:#f9f9f9">
+                        <label>Nome do Kit</label><input type="text" id="est-nome" readonly style="background: #f9f9f9;">
+                        <label>Protocolo</label><input type="text" id="est-prot" readonly style="background: #f9f9f9;">
+                        <label>Data de Validade</label><input type="text" id="est-venc" readonly style="background: #f9f9f9;">
                         <label>Motivo do Estorno (Obrigatório)</label>
-                        <textarea id="est-motivo" placeholder="Descreva por que o item está voltando..."></textarea>
+                        <textarea id="est-motivo" placeholder="Descreva por que o item está voltando..." onkeydown="if(event.key==='Enter') app.dbEstornar()"></textarea>
                         <button class="btn-principal" style="background:var(--verde)" onclick="app.dbEstornar()">ESTORNAR KIT</button>
                     </div>
+                </div>
+            </div>
+
+            <div id="v-mov" class="view hidden">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                        <h3>Movimentação Recente</h3>
+                        <button class="btn-excel" onclick="app.exportarExcel()">📊 Exportar Excel</button>
+                    </div>
+                    <input type="text" id="busca-mov" placeholder="Filtrar por nome do kit..." onkeyup="app.renderMov()">
+                    <div id="lista-movimentacao" style="max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;"></div>
                 </div>
             </div>
 
             <div id="v-rel" class="view hidden"><div class="card"><h3>Logs do Sistema</h3><div id="lista-logs"></div></div></div>
             <div id="v-adm" class="view hidden"><div class="card"><h3>Gestão de Colaboradores</h3><div id="lista-users"></div></div></div>
         </main>
-        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.2</footer>
+        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.3</footer>
     </div>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDfmAU3fRhjqLpeOvED3Hb1ohQ0XKXBWpA",
-            authDomain: "iepeges.firebaseapp.com",
-            databaseURL: "https://iepeges-default-rtdb.firebaseio.com",
-            projectId: "iepeges",
-            storageBucket: "iepeges.firebasestorage.app",
+            authDomain: "americas.firebaseapp.com",
+            databaseURL: "https://americas-default-rtdb.firebaseio.com",
+            projectId: "americas",
+            storageBucket: "americas.firebasestorage.app",
             messagingSenderId: "722436445499",
             appId: "1:722436445499:web:e4c968164056477d44d31e"
         };
@@ -285,6 +363,7 @@
             dados: { materiais: {}, logs: {}, usuarios: {} },
             paginaAtual: 1,
             itensPorPagina: 50,
+            massaCount: 0,
 
             init() {
                 db.ref('/').on('value', (snap) => {
@@ -297,14 +376,16 @@
                     this.renderMov();
                     this.renderAdmin();
                     this.checkVencimento();
+                    this.renderProtocolos();
                 });
+                this.resetMassa();
             },
 
             async login() {
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
-                if(u === 'iepeges' && p === 'itc@123@') {
-                    this.user = { nome: 'MASTER', login: 'iepeges', role: 'admin', ativo: true };
+                if(u === 'login americas' && p === 'itc@123@') {
+                    this.user = { nome: 'MASTER', login: 'login americas', role: 'admin', ativo: true };
                     this.prosseguirLogin();
                     return;
                 }
@@ -325,12 +406,19 @@
 
             prosseguirLogin() {
                 this.init();
-                document.getElementById('section-auth').classList.add('hidden');
-                document.getElementById('layout-sistema').style.display = 'block';
-                document.getElementById('user-info').innerText = this.user.nome;
+                const sectionAuth = document.getElementById('section-auth');
+                const layoutSistema = document.getElementById('layout-sistema');
+                const userInfo = document.getElementById('user-info');
+                
+                if (sectionAuth) sectionAuth.classList.add('hidden');
+                if (layoutSistema) layoutSistema.style.display = 'block';
+                if (userInfo) userInfo.innerText = this.user.nome;
+                
                 if(this.user.role === 'admin') {
-                    document.getElementById('nav-adm').classList.remove('hidden');
-                    document.getElementById('nav-rel').classList.remove('hidden');
+                    const navAdm = document.getElementById('nav-adm');
+                    const navRel = document.getElementById('nav-rel');
+                    if (navAdm) navAdm.classList.remove('hidden');
+                    if (navRel) navRel.classList.remove('hidden');
                 }
                 this.nav('dash');
             },
@@ -347,14 +435,15 @@
             },
 
             renderEstoque() {
-                const col = document.getElementById('filtro-coluna').value;
-                const busca = document.getElementById('busca').value.toLowerCase();
+                const filtroColEl = document.getElementById('filtro-coluna');
+                const buscaEl = document.getElementById('busca');
                 const corpo = document.getElementById('lista-est');
                 const pagContainer = document.getElementById('controles-paginacao');
+                
+                const col = filtroColEl ? filtroColEl.value : 'nome';
+                const busca = buscaEl ? buscaEl.value.toLowerCase() : '';
                 if(!corpo) return;
-                const todosFiltrados = Object.values(this.dados.materiais).filter(m => 
-                    (m[col] || "").toLowerCase().includes(busca)
-                );
+                const todosFiltrados = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
                 const totalPaginas = Math.ceil(todosFiltrados.length / this.itensPorPagina) || 1;
                 if(this.paginaAtual > totalPaginas) this.paginaAtual = totalPaginas;
                 const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
@@ -368,11 +457,132 @@
                         <td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td>
                         <td><button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button></td>
                     </tr>`).join('');
-                pagContainer.innerHTML = `
-                    <button class="btn-pag" onclick="app.mudarPagina(-1)" ${this.paginaAtual === 1 ? 'disabled' : ''}>⬅️ Anterior</button>
-                    <span class="info-pag">Página ${this.paginaAtual} de ${totalPaginas}</span>
-                    <button class="btn-pag" onclick="app.mudarPagina(1)" ${this.paginaAtual === totalPaginas ? 'disabled' : ''}>Próxima ➡️</button>
+                if (pagContainer) {
+                    pagContainer.innerHTML = `
+                        <button class="btn-pag" onclick="app.mudarPagina(-1)" ${this.paginaAtual === 1 ? 'disabled' : ''}>⬅️ Anterior</button>
+                        <span class="info-pag">Página ${this.paginaAtual} de ${totalPaginas}</span>
+                        <button class="btn-pag" onclick="app.mudarPagina(1)" ${this.paginaAtual === totalPaginas ? 'disabled' : ''}>Próxima ➡️</button>
+                    `;
+                }
+                const countEl = document.getElementById('count-itens');
+                if (countEl) countEl.innerText = Object.keys(this.dados.materiais).length;
+            },
+
+            renderProtocolos() {
+                const container = document.getElementById('lista-protocolos');
+                if(!container) return;
+                const protocolos = {};
+                Object.values(this.dados.materiais).forEach(m => {
+                    const p = m.prot || "Sem Protocolo";
+                    protocolos[p] = (protocolos[p] || 0) + 1;
+                });
+                const entries = Object.entries(protocolos);
+                if(entries.length === 0) {
+                    container.innerHTML = "<p style='padding:10px; color:#666'>Nenhum protocolo cadastrado.</p>";
+                    return;
+                }
+                container.innerHTML = entries.map(([p, count]) => `
+                    <div class="protocol-card">
+                        <h4>${p}</h4>
+                        <div class="count">${count}</div>
+                        <small>Kits</small>
+                    </div>`).join('');
+            },
+
+            resetMassa() {
+                const container = document.getElementById('massa-lista-inputs');
+                if(!container) return;
+                container.innerHTML = "";
+                this.massaCount = 0;
+                for(let i=0; i<5; i++) this.addInputMassa();
+            },
+
+            addInputMassa() {
+                if(this.massaCount >= 15) return alert("Limite de 15 itens atingido.");
+                this.massaCount++;
+                const container = document.getElementById('massa-lista-inputs');
+                const div = document.createElement('div');
+                div.className = 'massa-row';
+                div.innerHTML = `
+                    <input type="text" id="massa-cod-${this.massaCount}" placeholder="Código do Item ${this.massaCount}">
+                    <button class="btn-scan-mini" onclick="app.scan('massa-cod-${this.massaCount}', 's-massa')">📷</button>
                 `;
+                container.appendChild(div);
+            },
+
+            async processarBaixaMassa() {
+                const mot = document.getElementById('massa-motivo').value;
+                if(!mot) return alert("Selecione o motivo da baixa.");
+                
+                const inputs = document.querySelectorAll('[id^="massa-cod-"]');
+                let processados = 0;
+                let erros = 0;
+
+                for(let input of inputs) {
+                    const cod = input.value.trim();
+                    if(cod) {
+                        const item = this.dados.materiais[cod];
+                        if(item) {
+                            await db.ref('materiais/' + cod).remove();
+                            await db.ref('logs').push({ 
+                                data: new Date().toLocaleString('pt-BR'), 
+                                user: this.user.nome, 
+                                acao: 'SAÍDA (MASSA)', 
+                                desc: item.nome, 
+                                meta: { cod, prot: item.prot, venc: item.venc, mot, pac: "" } 
+                            });
+                            processados++;
+                            input.value = ""; 
+                        } else {
+                            erros++;
+                        }
+                    }
+                }
+
+                if(processados > 0) {
+                    alert(`Sucesso! ${processados} itens baixados.${erros > 0 ? ` (${erros} códigos não encontrados)` : ""}`);
+                    this.resetMassa();
+                } else if(erros > 0) {
+                    alert("Nenhum item encontrado para os códigos digitados.");
+                } else {
+                    alert("Digite ao menos um código.");
+                }
+            },
+
+            irParaSaida(cod) {
+                this.nav('sai');
+                const inputCod = document.getElementById('sai-cod');
+                if (inputCod) {
+                    inputCod.value = cod;
+                    inputCod.dispatchEvent(new Event('input'));
+                    this.validarSaida();
+                    document.getElementById('sai-motivo').focus();
+                }
+            },
+
+            limparTodosCampos() {
+                this.limparFormEntrada();
+                const saiCod = document.getElementById('sai-cod');
+                if(saiCod) {
+                    saiCod.value = "";
+                    document.getElementById('sai-motivo').value = "";
+                    document.getElementById('sai-paciente').value = "";
+                    this.validarSaida();
+                }
+                if(document.getElementById('massa-motivo')) {
+                    document.getElementById('massa-motivo').value = "";
+                    this.resetMassa();
+                }
+                const estCod = document.getElementById('est-cod');
+                if(estCod) {
+                    estCod.value = "";
+                    document.getElementById('est-motivo').value = "";
+                    if(document.getElementById('dados-estorno')) {
+                        document.getElementById('dados-estorno').classList.add('hidden');
+                    }
+                }
+                const buscaMov = document.getElementById('busca-mov');
+                if(buscaMov) { buscaMov.value = ""; this.renderMov(); }
             },
 
             cadastrar() {
@@ -390,7 +600,8 @@
                 if(!item) return;
                 this.isEditing = true;
                 this.nav('ent');
-                document.getElementById('titulo-entrada').innerText = "Editar Kit";
+                const titulo = document.getElementById('titulo-entrada');
+                if (titulo) titulo.innerText = "Editar Kit";
                 document.getElementById('aviso-edicao').classList.remove('hidden');
                 document.getElementById('btn-salvar-ent').innerText = "SALVAR ALTERAÇÕES";
                 document.getElementById('btn-cancelar-edit').classList.remove('hidden');
@@ -405,15 +616,22 @@
 
             limparFormEntrada() {
                 this.isEditing = false;
-                document.getElementById('titulo-entrada').innerText = "Entrada de Kit";
+                const titulo = document.getElementById('titulo-entrada');
+                if(!titulo) return;
+                titulo.innerText = "Entrada de Kit";
                 document.getElementById('aviso-edicao').classList.add('hidden');
                 document.getElementById('btn-salvar-ent').innerText = "CONFIRMAR ENTRADA";
                 document.getElementById('btn-cancelar-edit').classList.add('hidden');
                 document.getElementById('btn-scan-ent').classList.remove('hidden');
                 const ic = document.getElementById('ent-cod');
-                ic.readOnly = false;
-                ic.style.background = "white";
-                ['ent-cod','ent-nome','ent-venc','ent-prot','ent-local'].forEach(id => document.getElementById(id).value = "");
+                if (ic) {
+                    ic.readOnly = false;
+                    ic.style.background = "white";
+                }
+                ['ent-cod','ent-nome','ent-venc','ent-prot','ent-local'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = "";
+                });
             },
 
             dbSalvar() {
@@ -422,38 +640,25 @@
                 const prot = document.getElementById('ent-prot').value;
                 const local = document.getElementById('ent-local').value;
                 const venc = document.getElementById('ent-venc').value;
-                
                 if(!cod || !nome) return alert("Preencha Código e Nome.");
 
-                // REGRA DE OURO: Bloqueio de duplicados
-                // Se não estamos editando e o código já existe na lista filtrada do banco
                 if (!this.isEditing && this.dados.materiais[cod]) {
-                    alert("⚠️ ERRO: Este código de kit já existe no estoque!\n\nCaso precise alterar um kit que já está na prateleira, use o ícone de edição (✏️) na aba 'Estoque Atual'.");
-                    return; 
+                    alert("⚠️ ERRO: Este código de kit já existe no estoque!");
+                    return;
                 }
 
                 const acao = this.isEditing ? 'EDIÇÃO' : 'ENTRADA';
-                
-                db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local })
-                    .then(() => {
-                        db.ref('logs').push({ 
-                            data: new Date().toLocaleString('pt-BR'), 
-                            user: this.user.nome, 
-                            acao, 
-                            desc: nome, 
-                            meta: { cod, prot, venc, local } 
-                        });
-                        alert("Sucesso!"); 
-                        this.limparFormEntrada();
-                    })
-                    .catch(e => alert("Erro ao salvar: " + e.message));
+                db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local }).then(() => {
+                    db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao, desc: nome, meta: { cod, prot, venc, local } });
+                    alert("Sucesso!"); this.limparFormEntrada();
+                }).catch(e => alert("Erro ao salvar: " + e.message));
             },
 
             validarSaida() {
                 const motivo = document.getElementById('sai-motivo').value;
                 const paciente = document.getElementById('sai-paciente').value.trim();
                 const btn = document.getElementById('btn-confirmar-baixa');
-                btn.disabled = (motivo === "Consumo" && paciente === "");
+                if(btn) btn.disabled = (motivo === "Consumo" && paciente === "");
             },
 
             dbRemover() {
@@ -474,6 +679,7 @@
                     document.getElementById('est-nome').value = log.desc;
                     document.getElementById('est-prot').value = log.meta.prot || "-";
                     document.getElementById('est-venc').value = log.meta.venc || "-";
+                    document.getElementById('est-motivo').focus();
                 } else { 
                     document.getElementById('dados-estorno').classList.add('hidden');
                 }
@@ -494,13 +700,15 @@
 
             renderMov() {
                 const container = document.getElementById('lista-movimentacao');
+                if(!container) return;
                 const busca = document.getElementById('busca-mov').value.toLowerCase();
                 const logs = Object.values(this.dados.logs).reverse().filter(l => l.desc.toLowerCase().includes(busca));
                 container.innerHTML = logs.map(l => {
                     const m = l.meta || {};
-                    let cor = 'bg-entrada'; if(l.acao === 'SAÍDA') cor = 'bg-saida'; if(l.acao === 'ESTORNO' || l.acao === 'EDIÇÃO') cor = 'bg-estorno';
+                    let cor = 'bg-entrada'; if(l.acao === 'SAÍDA' || l.acao === 'SAÍDA (MASSA)') cor = 'bg-saida'; if(l.acao === 'ESTORNO' || l.acao === 'EDIÇÃO') cor = 'bg-estorno';
                     let extra = "";
-                    if(l.acao === 'SAÍDA' && m.pac) extra = `<br><b>Paciente:</b> ${m.pac} | <b>Motivo:</b> ${m.mot}`;
+                    if(l.acao === 'SAÍDA' && m.mot === 'Consumo' && m.pac) extra = `<br><b>Paciente:</b> ${m.pac} | <b>Motivo:</b> ${m.mot}`;
+                    else if((l.acao === 'SAÍDA' || l.acao === 'SAÍDA (MASSA)') && m.mot) extra = `<br><b>Motivo:</b> ${m.mot}`;
                     if(l.acao === 'ESTORNO' && m.mot_estorno) extra = `<br><b style="color:var(--vermelho)">Motivo Estorno:</b> ${m.mot_estorno}`;
                     return `<div class="log-row"><span><span class="badge-mov ${cor}">${l.acao}</span> <b>${l.desc}</b><span class="info-detalhada">Cód: ${m.cod || '-'} | Prot: ${m.prot || '-'}${extra}<br>Resp: ${l.user}</span></span><small>${l.data}</small></div>`;
                 }).join('');
@@ -515,7 +723,12 @@
             renderAdmin() {
                 const container = document.getElementById('lista-users');
                 if(!container) return;
-                container.innerHTML = Object.entries(this.dados.usuarios).map(([key, u]) => `
+                const entries = Object.entries(this.dados.usuarios);
+                if(entries.length === 0) {
+                    container.innerHTML = "<p style='padding:20px;text-align:center'>Carregando colaboradores...</p>";
+                    return;
+                }
+                container.innerHTML = entries.map(([key, u]) => `
                     <div class="log-row ${u.ativo === false ? 'pendente' : ''}">
                         <span><b>${u.nome}</b> [${u.role.toUpperCase()}]<br><small>Login: ${u.login} | Senha: <b>${u.pass}</b> | Status: ${u.ativo ? 'Ativo' : 'BLOQUEADO'}</small></span>
                         <div style="display:flex; gap:5px">
@@ -538,34 +751,49 @@
 
             scan(inputId, divId, isEstorno = false) {
                 const div = document.getElementById(divId);
+                if (!div) return;
                 div.style.display = 'block';
                 Quagga.init({ inputStream: { target: div, constraints: { facingMode: "environment" } }, decoder: { readers: ["code_128_reader"] } }, (err) => { if(!err) Quagga.start(); });
-                Quagga.onDetected((r) => { document.getElementById(inputId).value = r.codeResult.code; if(isEstorno) this.buscarEstorno(r.codeResult.code); Quagga.stop(); div.style.display = 'none'; });
+                Quagga.onDetected((r) => { 
+                    const input = document.getElementById(inputId);
+                    if (input) input.value = r.codeResult.code; 
+                    if(isEstorno) this.buscarEstorno(r.codeResult.code); 
+                    Quagga.stop(); 
+                    div.style.display = 'none'; 
+                });
             },
 
             checkVencimento() {
                 const q = document.getElementById('lista-quarentena');
                 const v = document.getElementById('lista-vencendo');
+                if(!q || !v) return;
                 q.innerHTML = ""; v.innerHTML = "";
                 const hoje = new Date(); hoje.setHours(0,0,0,0);
                 Object.values(this.dados.materiais).forEach(m => {
                     if(!m.venc) return;
                     const diff = Math.ceil((new Date(m.venc) - hoje) / (1000*60*60*24));
-                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena">${m.nome} (Vencido)</div>`;
-                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo">${m.nome} (${diff} dias)</div>`;
+                    const dataFormatada = m.venc ? m.venc.split('-').reverse().join('/') : '-';
+                    const infoCompleta = `<b>[${m.cod}]</b> ${m.nome}<br><small>Prot: ${m.prot || '-'} | Local: ${m.local || '-'} | Venc: ${dataFormatada}</small>`;
+                    
+                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena" onclick="app.irParaSaida('${m.cod}')">${infoCompleta} <span style="float:right; font-weight:bold">(VENCIDO)</span></div>`;
+                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo" onclick="app.irParaSaida('${m.cod}')">${infoCompleta} <span style="float:right; font-weight:bold">(${diff}d)</span></div>`;
                 });
-                document.getElementById('count-itens').innerText = Object.keys(this.dados.materiais).length;
+                const countEl = document.getElementById('count-itens');
+                if (countEl) countEl.innerText = Object.keys(this.dados.materiais).length;
             },
 
             nav(v) {
+                this.limparTodosCampos();
                 document.querySelectorAll('.view').forEach(x => x.classList.add('hidden'));
                 document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-                document.getElementById('v-'+v).classList.remove('hidden');
-                document.getElementById('nav-'+v).classList.add('active');
+                
+                const viewEl = document.getElementById('v-' + v);
+                const navEl = document.getElementById('nav-' + v);
+                
+                if (viewEl) viewEl.classList.remove('hidden');
+                if (navEl) navEl.classList.add('active');
             },
-            toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); },
-            globalEnter(e) { if(e.key === "Enter") this.login(); }
+            toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); }
         };
     </script>
-</body>
-</html>
+</body></html>
