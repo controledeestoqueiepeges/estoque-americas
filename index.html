@@ -631,8 +631,11 @@
                 const venc = document.getElementById('ent-venc').value;
                 if(!cod || !nome) return alert("Preencha Código e Nome.");
 
-                if (!this.isEditing && this.dados.materiais[cod]) {
-                    alert("⚠️ ERRO: Este código de kit já existe no estoque!");
+                // REGRA DE OURO: Bloqueio de duplicados APENAS se for uma nova entrada
+                // Se o campo de código estiver bloqueado (readonly), o sistema entende que é uma edição e pula este alerta.
+                const campoCod = document.getElementById('ent-cod');
+                if (campoCod && !campoCod.readOnly && this.dados.materiais[cod]) {
+                    alert("⚠️ ERRO: Este código de kit já existe no estoque!\n\nCaso precise alterar um kit que já está na prateleira, use o ícone de edição (✏️) na aba 'Dashboard'.");
                     return;
                 }
 
