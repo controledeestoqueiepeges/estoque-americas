@@ -140,7 +140,6 @@
         <header>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
-                <h2 style="font-size: 18px; font-weight: 700; letter-spacing: 1px;">CONTROLE DE ESTOQUE AMÉRICAS</h2>
             </div>
             <div style="display: flex; align-items: center; gap: 20px;">
                 <small id="user-info" style="font-weight:600"></small>
@@ -161,17 +160,6 @@
 
         <main>
             <div id="v-dash" class="view">
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:20px">
-                    <div class="card" style="border-left: 5px solid var(--vermelho)">
-                        <small>Itens Vencidos</small>
-                        <div id="lista-quarentena"></div>
-                    </div>
-                    <div class="card" style="border-left: 5px solid var(--alerta-laranja)">
-                        <small>Vencendo (45 dias)</small>
-                        <div id="lista-vencendo"></div>
-                    </div>
-                </div>
-
                 <div class="card">
                     <h3>Resumo por Protocolo</h3>
                     <div id="lista-protocolos" class="protocol-grid"></div>
@@ -209,6 +197,17 @@
                         <div style="background: var(--roxo); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 14px;">
                             Total em Estoque: <span id="count-itens">0</span>
                         </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:20px">
+                    <div class="card" style="border-left: 5px solid var(--vermelho)">
+                        <small>Itens Vencidos</small>
+                        <div id="lista-quarentena"></div>
+                    </div>
+                    <div class="card" style="border-left: 5px solid var(--alerta-laranja)">
+                        <small>Vencendo (45 dias)</small>
+                        <div id="lista-vencendo"></div>
                     </div>
                 </div>
             </div>
