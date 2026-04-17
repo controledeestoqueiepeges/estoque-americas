@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROLE DE ESTOQUE | v1.3</title>
+    <title>IEPEGES - SISTEMA UNIFICADO</title>
     
     <!-- Firebase SDKs (Versão Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -38,15 +38,14 @@
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--cinza-fundo); color: var(--texto); overflow-x: hidden; }
 
         /* --- LOGIN --- */
-        .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--cinza-fundo); }
+        .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--cinza-fundo); transition: background 0.5s; }
         .auth-card { background: var(--premium-card); width: 100%; max-width: 400px; padding: 40px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); text-align: center; }
         .auth-card img { width: 220px; margin-bottom: 25px; border-radius: 8px; }
         .auth-card h3 { font-size: 24px; font-weight: 600; color: var(--premium-text); margin-bottom: 25px; }
         .auth-card label { display: block; text-align: left; font-size: 11px; font-weight: 700; color: var(--premium-gray); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px; }
-        .auth-card input { width: 100%; padding: 14px; background: #f9f9fb; border: 1px solid #e5e5e7; border-radius: 12px; margin-bottom: 18px; font-size: 16px; outline: none; transition: 0.2s; color: var(--premium-text); }
-        .auth-card input::placeholder { color: var(--premium-gray); }
+        .auth-card input, .auth-card select { width: 100%; padding: 14px; background: #f9f9fb; border: 1px solid #e5e5e7; border-radius: 12px; margin-bottom: 18px; font-size: 16px; outline: none; transition: 0.2s; color: var(--premium-text); }
         .btn-premium { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--premium-accent); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .btn-premium:hover { background: var(--roxo); transform: translateY(-2px); opacity: 0.9; }
+        .btn-premium:hover { transform: translateY(-2px); opacity: 0.9; }
 
         /* --- SISTEMA --- */
         #layout-sistema { display: none; min-height: 100vh; padding-bottom: 60px; }
@@ -69,41 +68,40 @@
         .btn-principal { background: var(--roxo); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: 0.3s; }
         .btn-principal:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6; }
         
-        .btn-excel { background: #1d6f42; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
-        .paginacao-controles { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; padding: 10px; }
-        .btn-pag { background: var(--roxo); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-pag:disabled { background: #ccc; cursor: not-allowed; }
-        .info-pag { font-size: 14px; font-weight: 600; color: var(--texto); }
-
-        .log-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .log-row.pendente { background: #fff9db; border-left: 5px solid var(--alerta-laranja); }
-        .badge-mov { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; color: white; }
-        .bg-entrada { background: var(--verde); }
-        .bg-saida { background: var(--vermelho); }
-        .bg-estorno { background: var(--alerta-laranja); }
-        .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
-        .btn-adm { background: #eee; border: 1px solid #ccc; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; }
-
-        .alert-item { padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px; border-left: 5px solid; line-height: 1.4; text-align: left; cursor: pointer; transition: transform 0.2s; }
-        .alert-item:hover { transform: scale(1.02); opacity: 0.9; }
-        .bg-quarentena { background: #fee2e2; border-color: var(--vermelho); color: #991b1b; }
-        .bg-vencendo { background: #fef3c7; border-color: var(--alerta-laranja); color: #92400e; }
-        
-        /* Dashboard Protocolos */
         .protocol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
         .protocol-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 15px; text-align: center; transition: 0.3s; }
         .protocol-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: var(--roxo); }
         .protocol-card h4 { margin: 0; font-size: 14px; color: var(--escuro); }
         .protocol-card .count { font-size: 24px; font-weight: bold; color: var(--roxo); margin-top: 5px; }
 
+        .alert-item { padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px; border-left: 5px solid; line-height: 1.4; text-align: left; cursor: pointer; transition: transform 0.2s; }
+        .alert-item:hover { transform: scale(1.02); opacity: 0.9; }
+        .bg-quarentena { background: #fee2e2; border-color: var(--vermelho); color: #991b1b; }
+        .bg-vencendo { background: #fef3c7; border-color: var(--alerta-laranja); color: #92400e; }
+
         .hidden { display: none !important; }
         .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); overflow: hidden; }
         
-        /* Baixa em Massa */
         .massa-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
         .massa-row input { margin-bottom: 0; flex-grow: 1; }
         .btn-scan-mini { background: var(--roxo); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
         .btn-add-item { background: #636e72; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+
+        .log-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .badge-mov { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; color: white; }
+        .bg-entrada { background: var(--verde); }
+        .bg-saida { background: var(--vermelho); }
+        .bg-estorno { background: var(--alerta-laranja); }
+        .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
+
+        /* Estilos Admin */
+        .user-card { background: #f9f9fb; border: 1px solid #e5e5e7; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .user-info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .user-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-adm-action { padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
+        .btn-adm-action:hover { background: #f0f0f0; }
+        .btn-adm-approve { background: var(--verde); color: white; border: none; }
+        .btn-adm-block { background: var(--vermelho); color: white; border: none; }
 
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--escuro); color: #cbb2ff; text-align: center; padding: 10px; font-size: 12px; z-index: 1001; }
 
@@ -114,12 +112,19 @@
 
     <section id="section-auth" class="auth-screen">
         <div id="card-login" class="auth-card">
-            <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
+            <img id="login-logo" src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
+            
+            <label>Selecione a Unidade</label>
+            <select id="login-filial" onchange="app.updateTheme(this.value)">
+                <option value="RJ">RIO DE JANEIRO</option>
+                <option value="SP">SÃO PAULO</option>
+            </select>
+
             <label>Usuário</label>
             <input type="text" id="login-user" placeholder="Digite seu login" onkeydown="if(event.key==='Enter') app.login()">
             <label>Senha</label>
             <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') app.login()">
-            <button class="btn-premium" onclick="app.login()">ACESSAR</button>
+            <button class="btn-premium" id="btn-login" onclick="app.login()">ACESSAR</button>
             <p style="margin-top:20px; font-size:14px; color:var(--premium-gray)">
                 Novo por aqui? <a href="#" onclick="app.toggleAuth()" style="color:var(--premium-accent); font-weight:600; text-decoration:none">Solicitar Acesso</a>
             </p>
@@ -139,7 +144,8 @@
     <div id="layout-sistema">
         <header>
             <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
+                <img id="header-logo" src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
+                <h2 id="header-title" style="font-size: 18px; font-weight: 700; letter-spacing: 1px;">Sistema de Controle de Estoque Unificado Américas</h2>
             </div>
             <div style="display: flex; align-items: center; gap: 20px;">
                 <small id="user-info" style="font-weight:600"></small>
@@ -218,26 +224,23 @@
                     <div id="aviso-edicao" class="hidden" style="background:#fff3cd; color:#856404; padding:10px; border-radius:8px; margin-bottom:15px; font-size:14px">
                         ⚠️ Você está no modo de edição. O código do kit não pode ser alterado.
                     </div>
-                    <button id="btn-scan-ent" class="btn-principal" style="background:var(--roxo); margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código de Barras</button>
+                    <button id="btn-scan-ent" class="btn-principal" style="margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código de Barras</button>
                     <div id="s-ent" class="scanner-view"></div>
                     
-                    <label>Código do Kit</label><input type="text" id="ent-cod" placeholder="Digite ou escaneie" onkeydown="if(event.key==='Enter') app.dbSalvar()">
-                    <label>Nome do Kit</label><input type="text" id="ent-nome" placeholder="Ex: Kit Cirúrgico A" onkeydown="if(event.key==='Enter') app.dbSalvar()">
+                    <label>Código do Kit</label><input type="text" id="ent-cod" placeholder="Digite ou escaneie">
+                    <label>Nome do Kit</label><input type="text" id="ent-nome" placeholder="Ex: Kit Cirúrgico A">
                     
                     <label>Protocolo</label>
                     <select id="ent-prot">
                         <option value="">Selecione...</option>
-                        <option value="20230246">20230246</option><option value="2011 (HARMONY)">2011 (HARMONY)</option><option value="AMGEN20230153">AMGEN20230153</option><option value="ARANOTE">ARANOTE</option><option value="ASCENT 7">ASCENT 7</option><option value="ATLAS">ATLAS</option><option value="BLUESTAR">BLUESTAR</option><option value="CA057-001">CA057-001</option><option value="CÂMBRIA 2">CÂMBRIA 2</option><option value="CAMELOT">CAMELOT</option><option value="CELLTRION">CELLTRION</option><option value="CLEE0011012001">CLEE0011012001</option><option value="DREAMM 7">DREAMM 7</option><option value="DS302">DS302</option><option value="ELEGANT">ELEGANT</option><option value="ESCALADE">ESCALADE</option><option value="EVOPAR">EVOPAR</option><option value="EVOPAR 2">EVOPAR 2</option><option value="EXCALIBER">EXCALIBER</option><option value="EXCALIBER MANUTENÇÃO">EXCALIBER MANUTENÇÃO</option><option value="GLOBRYTE">GLOBRYTE</option><option value="IMGN853-0421">IMGN853-0421</option><option value="IRAKLIA">IRAKLIA</option><option value="JPCF">JPCF</option><option value="JZLH">JZLH</option><option value="KER-050-D301">KER-050-D301</option><option value="LINKER">LINKER</option><option value="MAGNETISMM 32">MAGNETISMM 32</option><option value="MAGNETISMM 5">MAGNETISMM 5</option><option value="MAGNITUDE 01">MAGNITUDE 01</option><option value="MAGNITUDE 02">MAGNITUDE 02</option><option value="MAJESTEC 4">MAJESTEC 4</option><option value="MARIGOLD">MARIGOLD</option><option value="MK1084-004">MK1084-004</option><option value="MK-2870-020">MK-2870-020</option><option value="MONUMENTAL 3">MONUMENTAL 3</option><option value="MONUMENTAL 6">MONUMENTAL 6</option><option value="MOUTAINEER 03">MOUTAINEER 03</option><option value="OLYMPIA 01">OLYMPIA 01</option><option value="OLYMPIA 02">OLYMPIA 02</option><option value="OLYMPIA 03">OLYMPIA 03</option><option value="PRISM-MEL">PRISM-MEL</option><option value="REJOICE">REJOICE</option><option value="RYL-2608-102">RYL-2608-102</option><option value="SYMPHONY">SYMPHONY</option><option value="TROPIONLUNG15">TROPIONLUNG15</option><option value="VANTAGE">VANTAGE</option>
                     </select>
                     
-                   <label>Local de Armazenamento</label>
+                    <label>Local de Armazenamento</label>
                     <select id="ent-local">
                         <option value="">Selecione...</option>
-                        <option value="Armário 1">Armário 1</option><option value="Armário 2">Armário 2</option><option value="Armário 3">Armário 3</option><option value="Armário 4">Armário 4</option><option value="Armário 5">Armário 5</option><option value="Armário 6">Armário 6</option><option value="Armário 7">Armário 7</option><option value="Armário 8">Armário 8</option><option value="Banheiro Antigo">Banheiro Antigo</option><option value="Monitoria 1">Monitoria 1</option><option value="Monitoria 2">Monitoria 2</option><option value="Sala de Reunião 1">Sala de Reunião 1</option><option value="Sala de Reunião 2">Sala de Reunião 2</option>
                     </select>
-
                     
-                    <label>Data de Validade</label><input type="date" id="ent-venc" onkeydown="if(event.key==='Enter') app.dbSalvar()">
+                    <label>Data de Validade</label><input type="date" id="ent-venc">
                     
                     <div style="display:flex; gap:10px">
                         <button id="btn-salvar-ent" class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
@@ -251,7 +254,7 @@
                     <h3>Saída de Material (Baixa)</h3>
                     <button class="btn-principal" style="background:var(--vermelho); margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear para Baixa</button>
                     <div id="s-sai" class="scanner-view"></div>
-                    <label>Código do Kit</label><input type="text" id="sai-cod" placeholder="Escaneie ou digite..." onkeydown="if(event.key==='Enter') app.dbRemover()">
+                    <label>Código do Kit</label><input type="text" id="sai-cod" placeholder="Escaneie ou digite...">
                     <label>Motivo de Baixa</label>
                     <select id="sai-motivo" onchange="app.validarSaida()">
                         <option value="">Selecione...</option>
@@ -261,7 +264,7 @@
                         <option value="Devolução">Devolução</option>
                     </select>
                     <label>Código do Paciente (Obrigatório para Consumo)</label>
-                    <input type="text" id="sai-paciente" placeholder="Ex: PAC123" onkeyup="app.validarSaida()" onkeydown="if(event.key==='Enter') app.dbRemover()">
+                    <input type="text" id="sai-paciente" placeholder="Ex: PAC123" onkeyup="app.validarSaida()">
                     <button id="btn-confirmar-baixa" class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
                 </div>
             </div>
@@ -298,10 +301,9 @@
                     <div id="dados-estorno" class="hidden" style="margin-top:20px; border-top: 1px dashed #ccc; padding-top:20px">
                         <label>Nome do Kit</label><input type="text" id="est-nome" readonly style="background: #f9f9f9;">
                         <label>Protocolo</label><input type="text" id="est-prot" readonly style="background: #f9f9f9;">
-                        <label>Data de Validade</label><input type="text" id="est-venc" readonly style="background: #f9f9f9;">
-                        <label>Motivo do Estorno (Obrigatório)</label>
-                        <textarea id="est-motivo" placeholder="Descreva por que o item está voltando..." onkeydown="if(event.key==='Enter') app.dbEstornar()"></textarea>
-                        <button class="btn-principal" style="background:var(--verde)" onclick="app.dbEstornar()">ESTORNAR KIT</button>
+                        <label>Vencimento</label><input type="text" id="est-venc" readonly style="background: #f9f9f9;">
+                        <label>Motivo do Estorno</label><input type="text" id="est-motivo" placeholder="Ex: Erro de digitação">
+                        <button class="btn-principal" style="background:#444; margin-top:10px" onclick="app.dbEstornar()">CONFIRMAR ESTORNO</button>
                     </div>
                 </div>
             </div>
@@ -309,46 +311,144 @@
             <div id="v-mov" class="view hidden">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                        <h3>Movimentação Recente</h3>
-                        <button class="btn-excel" onclick="app.exportarExcel()">📊 Exportar Excel</button>
+                        <h3>Movimentação</h3>
+                        <input type="text" id="busca-mov" placeholder="Filtrar por nome..." onkeyup="app.renderMov()" style="width:200px; margin-bottom:0">
                     </div>
-                    <input type="text" id="busca-mov" placeholder="Filtrar por nome do kit..." onkeyup="app.renderMov()">
-                    <div id="lista-movimentacao" style="max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;"></div>
+                    <div id="lista-movimentacao"></div>
                 </div>
             </div>
 
-            <div id="v-rel" class="view hidden"><div class="card"><h3>Logs do Sistema</h3><div id="lista-logs"></div></div></div>
-            <div id="v-adm" class="view hidden"><div class="card"><h3>Gestão de Colaboradores</h3><div id="lista-users"></div></div></div>
+            <div id="v-rel" class="view hidden">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                        <h3>Logs do Sistema</h3>
+                        <button class="btn-excel" onclick="app.exportarExcel()">📥 Exportar Excel</button>
+                    </div>
+                    <div id="lista-logs" style="max-height: 500px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <div id="v-adm" class="view hidden">
+                <div class="card">
+                    <h3>Gerenciamento de Colaboradores</h3>
+                    <div id="lista-users"></div>
+                </div>
+            </div>
         </main>
-        <footer>Desenvolvido por <b>Milton Rangel</b> - Versão 1.3</footer>
+
+        <footer>
+            &copy; 2026 IEPEGES - Sistema de Controle de Estoque Unificado - Desenvolvido por Milton Rangel em 03/2026 - Contato: 21 996486754 - tomrangelguitar@gmail.com
+        </footer>
     </div>
 
     <script>
-        // CREDENCIAIS ORIGINAIS DO AMÉRICAS (RECUPERADAS)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDfmAU3fRhjqLpeOvED3Hb1ohQ0XKXBWpA",
-            authDomain: "iepeges.firebaseapp.com",
-            databaseURL: "https://iepeges-default-rtdb.firebaseio.com",
-            projectId: "iepeges",
-            storageBucket: "iepeges.firebasestorage.app",
-            messagingSenderId: "722436445499",
-            appId: "1:722436445499:web:e4c968164056477d44d31e"
+        const configs = {
+            RJ: {
+                title: "Sistema de Controle de Estoque Unificado",
+                accent: "#5a189a",
+                logo: "https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg",
+                firebase: {
+                    apiKey: "AIzaSyDfmAU3fRhjqLpeOvED3Hb1ohQ0XKXBWpA",
+                    authDomain: "iepeges.firebaseapp.com",
+                    databaseURL: "https://iepeges-default-rtdb.firebaseio.com",
+                    projectId: "iepeges",
+                    storageBucket: "iepeges.firebasestorage.app",
+                    messagingSenderId: "722436445499",
+                    appId: "1:722436445499:web:e4c968164056477d44d31e"
+                },
+                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
+                locais: ["Armário 1", "Armário 2", "Armário 3", "Armário 4", "Armário 5", "Armário 6", "Armário 7", "Armário 8", "Banheiro Antigo", "Monitoria 1", "Monitoria 2", "Sala de Reunião 1", "Sala de Reunião 2"]
+            },
+            SP: {
+                title: "Sistema de Controle de Estoque Unificado",
+                accent: "#0056b3",
+                logo: "https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg",
+                firebase: {
+                    apiKey: "AIzaSyAcYVVNVrAqxOfvxK41GBkyVDO-f4zRySw",
+                    authDomain: "estqsp-82f26.firebaseapp.com",
+                    databaseURL: "https://estqsp-82f26-default-rtdb.firebaseio.com",
+                    projectId: "estqsp-82f26",
+                    storageBucket: "estqsp-82f26.firebasestorage.app",
+                    messagingSenderId: "384493014083",
+                    appId: "1:384493014083:web:dc24b0d6b40333bdd798f6"
+                },
+                protocolos: ["CAMBRIA", "CA127-1030 -TRIDENT", "CA-224-127", "JZQB", "MK1022-016", "Mk1026-003", "MK1026-008", "MK1026-011", "MK2140-006", "Mk2140-010", "MK2870-004", "MK2870-020", "MK2870-022", "MK2870-023", "MK5684-004", "MK6482-011"],
+                locais: ["ARMÁRIO 24", "ARMÁRIO 25", "ARMÁRIO 26", "ARMÁRIO 27", "ARMÁRIO 28", "ARMÁRIO 29", "ARMÁRIO 34", "ARMÁRIO 35"]
+            }
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        firebase.auth().signInAnonymously().catch((error) => {
-            console.error("Erro na autenticação anônima:", error.message);
-        });
-
+        let db;
         const app = {
-            user: null, 
+            user: null,
+            unidade: 'RJ',
             isEditing: false,
             dados: { materiais: {}, logs: {}, usuarios: {} },
             paginaAtual: 1,
             itensPorPagina: 50,
             massaCount: 0,
+
+            updateTheme(unidade) {
+                this.unidade = unidade;
+                const config = configs[unidade];
+                document.documentElement.style.setProperty('--premium-accent', config.accent);
+                document.documentElement.style.setProperty('--roxo', config.accent);
+                document.documentElement.style.setProperty('--azul-principal', config.accent);
+                
+                document.getElementById('login-logo').src = config.logo;
+                document.getElementById('header-logo').src = config.logo;
+                document.getElementById('header-title').innerText = config.title;
+                
+                // Atualizar dropdowns de entrada
+                const protSel = document.getElementById('ent-prot');
+                const localSel = document.getElementById('ent-local');
+                protSel.innerHTML = '<option value="">Selecione...</option>' + config.protocolos.map(p => `<option value="${p}">${p}</option>`).join('');
+                localSel.innerHTML = '<option value="">Selecione...</option>' + config.locais.map(l => `<option value="${l}">${l}</option>`).join('');
+            },
+
+            async login() {
+                const u = document.getElementById('login-user').value.toLowerCase().trim();
+                const p = document.getElementById('login-pass').value.trim();
+                const config = configs[this.unidade];
+
+                if (firebase.apps.length) {
+                    await firebase.app().delete();
+                }
+                firebase.initializeApp(config.firebase);
+                db = firebase.database();
+                
+                await firebase.auth().signInAnonymously();
+
+                if(u === 'login americas' && p === 'itc@123@') {
+                    this.user = { nome: 'MASTER', login: u, role: 'admin', ativo: true };
+                    this.prosseguirLogin();
+                    return;
+                }
+
+                try {
+                    const snapshot = await db.ref('usuarios').once('value');
+                    const usuariosNoBanco = snapshot.val() || {};
+                    this.user = Object.values(usuariosNoBanco).find(x => x.login === u && x.pass === p);
+                    if(this.user && this.user.ativo !== false) {
+                        this.prosseguirLogin();
+                    } else { 
+                        alert("Acesso negado para esta unidade.");
+                    }
+                } catch (error) {
+                    alert("Erro ao conectar ao banco de dados.");
+                }
+            },
+
+            prosseguirLogin() {
+                this.init();
+                document.getElementById('section-auth').classList.add('hidden');
+                document.getElementById('layout-sistema').style.display = 'block';
+                document.getElementById('user-info').innerText = this.user.nome;
+                if(this.user.role === 'admin') {
+                    document.getElementById('nav-adm').classList.remove('hidden');
+                    document.getElementById('nav-rel').classList.remove('hidden');
+                }
+                this.nav('dash');
+            },
 
             init() {
                 db.ref('/').on('value', (snap) => {
@@ -366,77 +466,38 @@
                 this.resetMassa();
             },
 
-            async login() {
-                const u = document.getElementById('login-user').value.toLowerCase().trim();
-                const p = document.getElementById('login-pass').value.trim();
-                
-                // Login Master Américas
-                if(u === 'login americas' && p === 'itc@123@') {
-                    this.user = { nome: 'MASTER', login: 'login americas', role: 'admin', ativo: true };
-                    this.prosseguirLogin();
-                    return;
-                }
-
-                try {
-                    const snapshot = await db.ref('usuarios').once('value');
-                    const usuariosNoBanco = snapshot.val() || {};
-                    this.user = Object.values(usuariosNoBanco).find(x => x.login === u && x.pass === p);
-                    if(this.user && this.user.ativo !== false) {
-                        this.prosseguirLogin();
-                    } else { 
-                        alert("Acesso negado. Verifique seu login/senha ou se seu acesso já foi liberado.");
-                    }
-                } catch (error) {
-                    alert("Erro ao conectar ao banco de dados. Tente novamente.");
-                    console.error(error);
-                }
+            nav(id) {
+                document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('v-' + id).classList.remove('hidden');
+                document.getElementById('nav-' + id).classList.add('active');
+                this.limparTodosCampos();
             },
 
-            prosseguirLogin() {
-                this.init();
-                const sectionAuth = document.getElementById('section-auth');
-                const layoutSistema = document.getElementById('layout-sistema');
-                const userInfo = document.getElementById('user-info');
-                
-                if (sectionAuth) sectionAuth.classList.add('hidden');
-                if (layoutSistema) layoutSistema.style.display = 'block';
-                if (userInfo) userInfo.innerText = this.user.nome;
-                
-                if(this.user.role === 'admin') {
-                    const navAdm = document.getElementById('nav-adm');
-                    const navRel = document.getElementById('nav-rel');
-                    if (navAdm) navAdm.classList.remove('hidden');
-                    if (navRel) navRel.classList.remove('hidden');
-                }
-                this.nav('dash');
-            },
-
-            resetPaginacao() {
-                this.paginaAtual = 1;
-                this.renderEstoque();
-            },
-
-            mudarPagina(delta) {
-                this.paginaAtual += delta;
-                this.renderEstoque();
-                window.scrollTo(0, 0); 
+            limparTodosCampos() {
+                this.limparFormEntrada();
+                ['sai-cod', 'sai-paciente', 'est-cod', 'est-motivo'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = "";
+                });
+                const saiMot = document.getElementById('sai-motivo');
+                if(saiMot) saiMot.value = "";
+                this.validarSaida();
+                this.resetMassa();
+                const dadosEst = document.getElementById('dados-estorno');
+                if(dadosEst) dadosEst.classList.add('hidden');
             },
 
             renderEstoque() {
-                const filtroColEl = document.getElementById('filtro-coluna');
-                const buscaEl = document.getElementById('busca');
-                const corpo = document.getElementById('lista-est');
-                const pagContainer = document.getElementById('controles-paginacao');
-                
-                const col = filtroColEl ? filtroColEl.value : 'nome';
-                const busca = buscaEl ? buscaEl.value.toLowerCase() : '';
-                if(!corpo) return;
+                const col = document.getElementById('filtro-coluna').value;
+                const busca = document.getElementById('busca').value.toLowerCase();
                 const todosFiltrados = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
+                
                 const totalPaginas = Math.ceil(todosFiltrados.length / this.itensPorPagina) || 1;
-                if(this.paginaAtual > totalPaginas) this.paginaAtual = totalPaginas;
                 const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
                 const dadosPagina = todosFiltrados.slice(inicio, inicio + this.itensPorPagina);
-                corpo.innerHTML = dadosPagina.map(m => `
+                
+                document.getElementById('lista-est').innerHTML = dadosPagina.map(m => `
                     <tr>
                         <td>${m.cod}</td>
                         <td style="text-align:left"><b>${m.nome}</b></td>
@@ -445,157 +506,114 @@
                         <td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td>
                         <td><button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button></td>
                     </tr>`).join('');
-                if (pagContainer) {
-                    pagContainer.innerHTML = `
-                        <button class="btn-pag" onclick="app.mudarPagina(-1)" ${this.paginaAtual === 1 ? 'disabled' : ''}>⬅️ Anterior</button>
-                        <span class="info-pag">Página ${this.paginaAtual} de ${totalPaginas}</span>
-                        <button class="btn-pag" onclick="app.mudarPagina(1)" ${this.paginaAtual === totalPaginas ? 'disabled' : ''}>Próxima ➡️</button>
-                    `;
-                }
-                const countEl = document.getElementById('count-itens');
-                if (countEl) countEl.innerText = Object.keys(this.dados.materiais).length;
+                
+                document.getElementById('count-itens').innerText = todosFiltrados.length;
+                this.renderPaginacao(totalPaginas);
             },
+
+            renderPaginacao(total) {
+                document.getElementById('controles-paginacao').innerHTML = `
+                    <button class="btn-pag" ${this.paginaAtual === 1 ? 'disabled' : ''} onclick="app.mudarPagina(-1)">Anterior</button>
+                    <span class="info-pag">Página ${this.paginaAtual} de ${total}</span>
+                    <button class="btn-pag" ${this.paginaAtual === total ? 'disabled' : ''} onclick="app.mudarPagina(1)">Próxima</button>
+                `;
+            },
+
+            mudarPagina(delta) { this.paginaAtual += delta; this.renderEstoque(); },
+            resetPaginacao() { this.paginaAtual = 1; this.renderEstoque(); },
 
             renderProtocolos() {
-                const container = document.getElementById('lista-protocolos');
-                if(!container) return;
-                const protocolos = {};
+                const counts = {};
                 Object.values(this.dados.materiais).forEach(m => {
-                    const p = m.prot || "Sem Protocolo";
-                    protocolos[p] = (protocolos[p] || 0) + 1;
+                    const p = m.prot || 'Sem Protocolo';
+                    counts[p] = (counts[p] || 0) + 1;
                 });
-                const entries = Object.entries(protocolos);
-                if(entries.length === 0) {
-                    container.innerHTML = "<p style='padding:10px; color:#666'>Nenhum protocolo cadastrado.</p>";
-                    return;
-                }
-                container.innerHTML = entries.map(([p, count]) => `
+                document.getElementById('lista-protocolos').innerHTML = Object.entries(counts).map(([p, c]) => `
                     <div class="protocol-card">
                         <h4>${p}</h4>
-                        <div class="count">${count}</div>
-                        <small>Kits</small>
-                    </div>`).join('');
+                        <div class="count">${c}</div>
+                    </div>
+                `).join('');
             },
 
-            resetMassa() {
-                const container = document.getElementById('massa-lista-inputs');
-                if(!container) return;
-                container.innerHTML = "";
-                this.massaCount = 0;
-                for(let i=0; i<5; i++) this.addInputMassa();
+            checkVencimento() {
+                const hoje = new Date();
+                const limite = new Date(); limite.setDate(hoje.getDate() + 45);
+                const vencidos = [], vencendo = [];
+
+                Object.values(this.dados.materiais).forEach(m => {
+                    if(!m.venc) return;
+                    const dv = new Date(m.venc + "T00:00:00");
+                    const info = `<div class="alert-item ${dv < hoje ? 'bg-quarentena' : 'bg-vencendo'}" onclick="app.irParaSaida('${m.cod}')">
+                        <b>[${m.cod}] ${m.nome}</b><br>
+                        <small>Prot: ${m.prot || '-'} | Local: ${m.local || '-'} | Venc: ${m.venc.split('-').reverse().join('/')}</small>
+                    </div>`;
+                    if(dv < hoje) vencidos.push(info);
+                    else if(dv <= limite) vencendo.push(info);
+                });
+                document.getElementById('lista-quarentena').innerHTML = vencidos.join('') || '<p style="font-size:12px; color:#999">Nenhum item vencido.</p>';
+                document.getElementById('lista-vencendo').innerHTML = vencendo.join('') || '<p style="font-size:12px; color:#999">Nenhum item vencendo em 45 dias.</p>';
+            },
+
+            irParaSaida(cod) {
+                this.nav('sai');
+                document.getElementById('sai-cod').value = cod;
+                document.getElementById('sai-motivo').focus();
             },
 
             addInputMassa() {
                 if(this.massaCount >= 15) return alert("Limite de 15 itens atingido.");
                 this.massaCount++;
-                const container = document.getElementById('massa-lista-inputs');
                 const div = document.createElement('div');
                 div.className = 'massa-row';
                 div.innerHTML = `
                     <input type="text" id="massa-cod-${this.massaCount}" placeholder="Código do Item ${this.massaCount}">
                     <button class="btn-scan-mini" onclick="app.scan('massa-cod-${this.massaCount}', 's-massa')">📷</button>
                 `;
-                container.appendChild(div);
+                document.getElementById('massa-lista-inputs').appendChild(div);
+            },
+
+            resetMassa() {
+                this.massaCount = 0;
+                document.getElementById('massa-lista-inputs').innerHTML = "";
+                for(let i=0; i<5; i++) this.addInputMassa();
             },
 
             async processarBaixaMassa() {
                 const mot = document.getElementById('massa-motivo').value;
-                if(!mot) return alert("Selecione o motivo da baixa.");
-                
+                if(!mot) return alert("Selecione o motivo.");
                 const inputs = document.querySelectorAll('[id^="massa-cod-"]');
-                let processados = 0;
-                let erros = 0;
-
+                let count = 0;
                 for(let input of inputs) {
                     const cod = input.value.trim();
-                    if(cod) {
+                    if(cod && this.dados.materiais[cod]) {
                         const item = this.dados.materiais[cod];
-                        if(item) {
-                            await db.ref('materiais/' + cod).remove();
-                            await db.ref('logs').push({ 
-                                data: new Date().toLocaleString('pt-BR'), 
-                                user: this.user.nome, 
-                                acao: 'SAÍDA (MASSA)', 
-                                desc: item.nome, 
-                                meta: { cod, prot: item.prot, venc: item.venc, mot, pac: "" } 
-                            });
-                            processados++;
-                            input.value = ""; 
-                        } else {
-                            erros++;
-                        }
+                        await db.ref('materiais/' + cod).remove();
+                        await db.ref('logs').push({
+                            data: new Date().toLocaleString('pt-BR'),
+                            user: this.user.nome,
+                            acao: 'SAÍDA (MASSA)',
+                            desc: item.nome,
+                            meta: { cod, prot: item.prot, venc: item.venc, mot }
+                        });
+                        count++;
                     }
                 }
-
-                if(processados > 0) {
-                    alert(`Sucesso! ${processados} itens baixados.${erros > 0 ? ` (${erros} códigos não encontrados)` : ""}`);
-                    this.resetMassa();
-                } else if(erros > 0) {
-                    alert("Nenhum item encontrado para os códigos digitados.");
-                } else {
-                    alert("Digite ao menos um código.");
-                }
-            },
-
-            irParaSaida(cod) {
-                this.nav('sai');
-                const inputCod = document.getElementById('sai-cod');
-                if (inputCod) {
-                    inputCod.value = cod;
-                    inputCod.dispatchEvent(new Event('input'));
-                    this.validarSaida();
-                    document.getElementById('sai-motivo').focus();
-                }
-            },
-
-            limparTodosCampos() {
-                this.limparFormEntrada();
-                const saiCod = document.getElementById('sai-cod');
-                if(saiCod) {
-                    saiCod.value = "";
-                    document.getElementById('sai-motivo').value = "";
-                    document.getElementById('sai-paciente').value = "";
-                    this.validarSaida();
-                }
-                if(document.getElementById('massa-motivo')) {
-                    document.getElementById('massa-motivo').value = "";
-                    this.resetMassa();
-                }
-                const estCod = document.getElementById('est-cod');
-                if(estCod) {
-                    estCod.value = "";
-                    document.getElementById('est-motivo').value = "";
-                    if(document.getElementById('dados-estorno')) {
-                        document.getElementById('dados-estorno').classList.add('hidden');
-                    }
-                }
-                const buscaMov = document.getElementById('busca-mov');
-                if(buscaMov) { buscaMov.value = ""; this.renderMov(); }
-            },
-
-            cadastrar() {
-                const n = document.getElementById('cad-nome').value.trim();
-                const p = document.getElementById('cad-pass').value.trim();
-                if(n.length < 3 || p.length < 4) return alert("Dados insuficientes.");
-                const login = n.split(' ')[0].toLowerCase() + Math.floor(Math.random()*100);
-                db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user', ativo: false });
-                alert(`Solicitação enviada! Login gerado: ${login}`);
-                this.toggleAuth();
+                if(count > 0) { alert(`Sucesso! ${count} itens baixados.`); this.resetMassa(); }
+                else alert("Nenhum código válido encontrado.");
             },
 
             prepararEdicao(cod) {
                 const item = this.dados.materiais[cod];
-                if(!item) return;
                 this.isEditing = true;
                 this.nav('ent');
-                const titulo = document.getElementById('titulo-entrada');
-                if (titulo) titulo.innerText = "Editar Kit";
+                document.getElementById('titulo-entrada').innerText = "Editar Kit";
                 document.getElementById('aviso-edicao').classList.remove('hidden');
                 document.getElementById('btn-salvar-ent').innerText = "SALVAR ALTERAÇÕES";
                 document.getElementById('btn-cancelar-edit').classList.remove('hidden');
                 document.getElementById('btn-scan-ent').classList.add('hidden');
                 const ic = document.getElementById('ent-cod');
-                ic.value = item.cod; ic.readOnly = true; ic.style.background = "#eee"; 
+                ic.value = item.cod; ic.readOnly = true; ic.style.background = "#eee";
                 document.getElementById('ent-nome').value = item.nome;
                 document.getElementById('ent-prot').value = item.prot || "";
                 document.getElementById('ent-local').value = item.local || "";
@@ -604,22 +622,16 @@
 
             limparFormEntrada() {
                 this.isEditing = false;
-                const titulo = document.getElementById('titulo-entrada');
-                if(!titulo) return;
-                titulo.innerText = "Entrada de Kit";
+                const tit = document.getElementById('titulo-entrada');
+                if(!tit) return;
+                tit.innerText = "Entrada de Kit";
                 document.getElementById('aviso-edicao').classList.add('hidden');
                 document.getElementById('btn-salvar-ent').innerText = "CONFIRMAR ENTRADA";
                 document.getElementById('btn-cancelar-edit').classList.add('hidden');
                 document.getElementById('btn-scan-ent').classList.remove('hidden');
                 const ic = document.getElementById('ent-cod');
-                if (ic) {
-                    ic.readOnly = false;
-                    ic.style.background = "white";
-                }
-                ['ent-cod','ent-nome','ent-venc','ent-prot','ent-local'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el) el.value = "";
-                });
+                ic.value = ""; ic.readOnly = false; ic.style.background = "white";
+                ['ent-nome','ent-prot','ent-local','ent-venc'].forEach(id => document.getElementById(id).value = "");
             },
 
             dbSalvar() {
@@ -630,26 +642,15 @@
                 const venc = document.getElementById('ent-venc').value;
                 if(!cod || !nome) return alert("Preencha Código e Nome.");
 
-                // REGRA DE OURO: Bloqueio de duplicados APENAS se for uma nova entrada
-                // Se o campo de código estiver bloqueado (readonly), o sistema entende que é uma edição e pula este alerta.
-                const campoCod = document.getElementById('ent-cod');
-                if (campoCod && !campoCod.readOnly && this.dados.materiais[cod]) {
-                    alert("⚠️ ERRO: Este código de kit já existe no estoque!\n\nCaso precise alterar um kit que já está na prateleira, use o ícone de edição (✏️) na aba 'Dashboard'.");
-                    return;
+                if(!document.getElementById('ent-cod').readOnly && this.dados.materiais[cod]) {
+                    return alert("⚠️ ERRO: Este código de kit já existe no estoque!");
                 }
 
                 const acao = this.isEditing ? 'EDIÇÃO' : 'ENTRADA';
                 db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local }).then(() => {
                     db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao, desc: nome, meta: { cod, prot, venc, local } });
                     alert("Sucesso!"); this.limparFormEntrada();
-                }).catch(e => alert("Erro ao salvar: " + e.message));
-            },
-
-            validarSaida() {
-                const motivo = document.getElementById('sai-motivo').value;
-                const paciente = document.getElementById('sai-paciente').value.trim();
-                const btn = document.getElementById('btn-confirmar-baixa');
-                if(btn) btn.disabled = (motivo === "Consumo" && paciente === "");
+                });
             },
 
             dbRemover() {
@@ -658,9 +659,16 @@
                 const pac = document.getElementById('sai-paciente').value.trim();
                 const item = this.dados.materiais[cod];
                 if(!item || !mot) return alert("Dados incompletos.");
-                db.ref('materiais/' + cod).remove();
-                db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'SAÍDA', desc: item.nome, meta: { cod, prot: item.prot, venc: item.venc, mot, pac } });
-                document.getElementById('sai-cod').value = ""; document.getElementById('sai-paciente').value = ""; alert("Baixa realizada.");
+                db.ref('materiais/' + cod).remove().then(() => {
+                    db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'SAÍDA', desc: item.nome, meta: { cod, prot: item.prot, venc: item.venc, mot, pac } });
+                    alert("Baixa realizada."); this.limparTodosCampos();
+                });
+            },
+
+            validarSaida() {
+                const mot = document.getElementById('sai-motivo').value;
+                const pac = document.getElementById('sai-paciente').value.trim();
+                document.getElementById('btn-confirmar-baixa').disabled = (mot === 'Consumo' && !pac);
             },
 
             buscarEstorno(cod) {
@@ -671,124 +679,119 @@
                     document.getElementById('est-prot').value = log.meta.prot || "-";
                     document.getElementById('est-venc').value = log.meta.venc || "-";
                     document.getElementById('est-motivo').focus();
-                } else { 
-                    document.getElementById('dados-estorno').classList.add('hidden');
-                }
+                } else alert("Saída não encontrada para este código.");
             },
 
             dbEstornar() {
                 const cod = document.getElementById('est-cod').value.trim();
                 const mot = document.getElementById('est-motivo').value.trim();
                 if(!mot) return alert("Motivo obrigatório.");
-                const nome = document.getElementById('est-nome').value;
-                const prot = document.getElementById('est-prot').value;
-                const venc = document.getElementById('est-venc').value;
-                db.ref('materiais/' + cod).set({ cod, nome, prot, venc, local: "ESTORNO" });
-                db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'ESTORNO', desc: nome, meta: { cod, prot, venc, mot_estorno: mot } });
-                alert("Estornado!");
-                document.getElementById('est-cod').value = ""; document.getElementById('est-motivo').value = ""; document.getElementById('dados-estorno').classList.add('hidden');
+                const item = { cod, nome: document.getElementById('est-nome').value, prot: document.getElementById('est-prot').value, venc: document.getElementById('est-venc').value, local: "ESTORNO" };
+                db.ref('materiais/' + cod).set(item).then(() => {
+                    db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao: 'ESTORNO', desc: item.nome, meta: { ...item, mot_estorno: mot } });
+                    alert("Estornado!"); this.limparTodosCampos();
+                });
             },
 
             renderMov() {
-                const container = document.getElementById('lista-movimentacao');
-                if(!container) return;
                 const busca = document.getElementById('busca-mov').value.toLowerCase();
                 const logs = Object.values(this.dados.logs).reverse().filter(l => l.desc.toLowerCase().includes(busca));
-                container.innerHTML = logs.map(l => {
+                document.getElementById('lista-movimentacao').innerHTML = logs.slice(0,100).map(l => {
                     const m = l.meta || {};
-                    let cor = 'bg-entrada'; if(l.acao === 'SAÍDA' || l.acao === 'SAÍDA (MASSA)') cor = 'bg-saida'; if(l.acao === 'ESTORNO' || l.acao === 'EDIÇÃO') cor = 'bg-estorno';
-                    let extra = "";
-                    if(l.acao === 'SAÍDA' && m.mot === 'Consumo' && m.pac) extra = `<br><b>Paciente:</b> ${m.pac} | <b>Motivo:</b> ${m.mot}`;
-                    else if((l.acao === 'SAÍDA' || l.acao === 'SAÍDA (MASSA)') && m.mot) extra = `<br><b>Motivo:</b> ${m.mot}`;
-                    if(l.acao === 'ESTORNO' && m.mot_estorno) extra = `<br><b style="color:var(--vermelho)">Motivo Estorno:</b> ${m.mot_estorno}`;
+                    let cor = 'bg-entrada'; if(l.acao.includes('SAÍDA')) cor = 'bg-saida'; if(l.acao === 'ESTORNO' || l.acao === 'EDIÇÃO') cor = 'bg-estorno';
+                    let extra = m.mot ? `<br><b>Motivo:</b> ${m.mot}` : "";
+                    if(l.acao === 'SAÍDA' && m.mot === 'Consumo' && m.pac) extra += ` | <b>Paciente:</b> ${m.pac}`;
+                    if(l.acao === 'ESTORNO' && m.mot_estorno) extra = `<br><b>Motivo Estorno:</b> ${m.mot_estorno}`;
                     return `<div class="log-row"><span><span class="badge-mov ${cor}">${l.acao}</span> <b>${l.desc}</b><span class="info-detalhada">Cód: ${m.cod || '-'} | Prot: ${m.prot || '-'}${extra}<br>Resp: ${l.user}</span></span><small>${l.data}</small></div>`;
                 }).join('');
             },
 
             renderLogs() {
-                const container = document.getElementById('lista-logs');
-                if(!container) return;
-                container.innerHTML = Object.values(this.dados.logs).reverse().slice(0,50).map(l => `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span></div>`).join('');
+                document.getElementById('lista-logs').innerHTML = Object.values(this.dados.logs).reverse().slice(0,100).map(l => `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span></div>`).join('');
             },
 
             renderAdmin() {
-                const container = document.getElementById('lista-users');
-                if(!container) return;
-                const entries = Object.entries(this.dados.usuarios);
-                if(entries.length === 0) {
-                    container.innerHTML = "<p style='padding:20px;text-align:center'>Carregando colaboradores...</p>";
-                    return;
-                }
-                container.innerHTML = entries.map(([key, u]) => `
-                    <div class="log-row ${u.ativo === false ? 'pendente' : ''}">
-                        <span><b>${u.nome}</b> [${u.role.toUpperCase()}]<br><small>Login: ${u.login} | Senha: <b>${u.pass}</b> | Status: ${u.ativo ? 'Ativo' : 'BLOQUEADO'}</small></span>
-                        <div style="display:flex; gap:5px">
-                            ${u.ativo === false ? `<button class="btn-adm" style="background:var(--verde); color:white" onclick="app.liberarUser('${key}', true)">✅ Aprovar</button>` : `<button class="btn-adm" onclick="app.liberarUser('${key}', false)">🚫 Bloquear</button>`}
-                            <button class="btn-adm" onclick="app.editPass('${key}')">🔑 Senha</button>
-                            <button class="btn-adm" onclick="app.editRole('${key}', '${u.role}')">🛡️ Cargo</button>
+                document.getElementById('lista-users').innerHTML = Object.entries(this.dados.usuarios).map(([id, u]) => `
+                    <div class="user-card">
+                        <div class="user-info-row">
+                            <span><b>${u.nome}</b> (${u.login})</span>
+                            <span class="badge-mov ${u.ativo ? 'bg-entrada' : 'bg-saida'}">${u.ativo ? 'Ativo' : 'Pendente'}</span>
                         </div>
-                    </div>`).join('');
+                        <div class="user-info-row">
+                            <small>Cargo: <b>${u.role === 'admin' ? 'Administrador' : 'Usuário'}</b></small>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn-adm-action ${u.ativo ? 'btn-adm-block' : 'btn-adm-approve'}" onclick="app.toggleUser('${id}', ${!u.ativo})">
+                                ${u.ativo ? 'Bloquear' : 'Aprovar'}
+                            </button>
+                            <button class="btn-adm-action" onclick="app.toggleRole('${id}', '${u.role === 'admin' ? 'user' : 'admin'}')">
+                                Tornar ${u.role === 'admin' ? 'Usuário' : 'Admin'}
+                            </button>
+                            <button class="btn-adm-action" onclick="app.resetPass('${id}')">Trocar Senha</button>
+                        </div>
+                    </div>
+                `).join('');
             },
 
-            liberarUser(key, status) { if(confirm(status ? "Ativar este usuário?" : "Bloquear este usuário?")) db.ref('usuarios/' + key).update({ ativo: status }); },
-            editPass(key) { const p = prompt("Digite a nova senha:"); if(p && p.length >= 4) db.ref('usuarios/' + key).update({ pass: p }); },
-            editRole(key, cur) { const next = cur === 'admin' ? 'user' : 'admin'; if(confirm(`Mudar cargo para ${next.toUpperCase()}?`)) db.ref('usuarios/' + key).update({ role: next }); },
-            
+            toggleUser(id, status) { db.ref('usuarios/' + id).update({ ativo: status }); },
+            toggleRole(id, role) { db.ref('usuarios/' + id).update({ role: role }); },
+            resetPass(id) {
+                const nova = prompt("Digite a nova senha:");
+                if(nova && nova.length >= 4) db.ref('usuarios/' + id).update({ pass: nova }).then(() => alert("Senha alterada!"));
+            },
+
+            cadastrar() {
+                const n = document.getElementById('cad-nome').value.trim();
+                const p = document.getElementById('cad-pass').value.trim();
+                if(n.length < 3 || p.length < 4) return alert("Dados insuficientes.");
+                const login = n.split(' ')[0].toLowerCase() + Math.floor(Math.random()*100);
+                db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user', ativo: false });
+                alert(`Solicitação enviada para a unidade ${this.unidade}! Login: ${login}`);
+                this.toggleAuth();
+            },
+
+            toggleAuth() {
+                document.getElementById('card-login').classList.toggle('hidden');
+                document.getElementById('card-cad').classList.toggle('hidden');
+            },
+
+            scan(targetId, viewId, isEstorno = false) {
+                const view = document.getElementById(viewId);
+                view.style.display = 'block';
+                Quagga.init({
+                    inputStream: { name: "Live", type: "LiveStream", target: view, constraints: { facingMode: "environment" } },
+                    decoder: { readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader"] }
+                }, (err) => {
+                    if(err) return alert("Erro na câmera.");
+                    Quagga.start();
+                });
+                Quagga.onDetected((data) => {
+                    const code = data.codeResult.code;
+                    document.getElementById(targetId).value = code;
+                    Quagga.stop();
+                    view.style.display = 'none';
+                    if(isEstorno) this.buscarEstorno(code);
+                });
+            },
+
             exportarExcel() {
-                const ws = XLSX.utils.json_to_sheet(Object.values(this.dados.logs));
-                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Log");
-                XLSX.writeFile(wb, "Relatorio_Estoque.xlsx");
-            },
-
-            scan(inputId, divId, isEstorno = false) {
-                const div = document.getElementById(divId);
-                if (!div) return;
-                div.style.display = 'block';
-                Quagga.init({ inputStream: { target: div, constraints: { facingMode: "environment" } }, decoder: { readers: ["code_128_reader"] } }, (err) => { if(!err) Quagga.start(); });
-                Quagga.onDetected((r) => { 
-                    const input = document.getElementById(inputId);
-                    if (input) input.value = r.codeResult.code; 
-                    if(isEstorno) this.buscarEstorno(r.codeResult.code); 
-                    Quagga.stop(); 
-                    div.style.display = 'none'; 
-                });
-            },
-
-            checkVencimento() {
-                const q = document.getElementById('lista-quarentena');
-                const v = document.getElementById('lista-vencendo');
-                if(!q || !v) return;
-                q.innerHTML = ""; v.innerHTML = "";
-                const hoje = new Date(); hoje.setHours(0,0,0,0);
-                Object.values(this.dados.materiais).forEach(m => {
-                    if(!m.venc) return;
-                    const diff = Math.ceil((new Date(m.venc) - hoje) / (1000*60*60*24));
-                    const dataFormatada = m.venc ? m.venc.split('-').reverse().join('/') : '-';
-                    const infoCompleta = `<b>[${m.cod}]</b> ${m.nome}<br><small>Prot: ${m.prot || '-'} | Local: ${m.local || '-'} | Venc: ${dataFormatada}</small>`;
-                    
-                    if(diff < 0) q.innerHTML += `<div class="alert-item bg-quarentena" onclick="app.irParaSaida('${m.cod}')">${infoCompleta} <span style="float:right; font-weight:bold">(VENCIDO)</span></div>`;
-                    else if(diff <= 45) v.innerHTML += `<div class="alert-item bg-vencendo" onclick="app.irParaSaida('${m.cod}')">${infoCompleta} <span style="float:right; font-weight:bold">(${diff}d)</span></div>`;
-                });
-                const countEl = document.getElementById('count-itens');
-                if (countEl) countEl.innerText = Object.keys(this.dados.materiais).length;
-            },
-
-            nav(v) {
-                this.limparTodosCampos();
-                document.querySelectorAll('.view').forEach(x => x.classList.add('hidden'));
-                document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-                
-                const viewEl = document.getElementById('v-' + v);
-                const navEl = document.getElementById('nav-' + v);
-                
-                if (viewEl) viewEl.classList.remove('hidden');
-                if (navEl) navEl.classList.add('active');
-            },
-            toggleAuth() { document.getElementById('card-login').classList.toggle('hidden'); document.getElementById('card-cad').classList.toggle('hidden'); }
+                const ws = XLSX.utils.json_to_sheet(Object.values(this.dados.logs).map(l => ({ Data: l.data, Usuário: l.user, Ação: l.acao, Item: l.desc, Código: l.meta?.cod, Protocolo: l.meta?.prot, Motivo: l.meta?.mot || l.meta?.mot_estorno, Paciente: l.meta?.pac })));
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Logs");
+                XLSX.writeFile(wb, `Estoque_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
+            }
         };
 
-        // Iniciar app
-        window.onload = () => app.init();
+        app.updateTheme('RJ');
+
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                const active = document.activeElement;
+                if(active.id === 'ent-cod' || active.id === 'ent-nome' || active.id === 'ent-venc') app.dbSalvar();
+                if(active.id === 'sai-cod' || active.id === 'sai-paciente') app.dbRemover();
+                if(active.id === 'est-cod') app.buscarEstorno(active.value);
+                if(active.id === 'est-motivo') app.dbEstornar();
+            }
+        });
     </script>
 </body>
 </html>
