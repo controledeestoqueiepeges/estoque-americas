@@ -99,6 +99,18 @@
         .bg-entrada { background: var(--verde); }
         .bg-saida { background: var(--vermelho); }
         .bg-estorno { background: var(--alerta-laranja); }
+        .bg-solicitacao { background: #3498db; }
+
+        /* Modal Exportação */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--escuro); }
+        .export-option { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; font-size: 14px; }
+        .export-option input { width: 18px; height: 18px; margin-bottom: 0; cursor: pointer; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
+        .btn-modal { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-confirm { background: var(--roxo); color: white; }
+        .btn-cancel { background: #eee; color: #666; }
         .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
 
         /* Estilos Admin */
@@ -163,6 +175,7 @@
         <aside class="sidebar">
             <button id="nav-dash" class="nav-btn active" onclick="app.nav('dash')">📊 <span>Dashboard</span></button>
             <button id="nav-ent" class="nav-btn" onclick="app.nav('ent')">📥 <span>Entrada de Kit</span></button>
+            <button id="nav-sol" class="nav-btn" onclick="app.nav('sol')">📝 <span>Solicitação de Kit</span></button>
             <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')">📤 <span>Saída de Kit</span></button>
             <button id="nav-massa" class="nav-btn" onclick="app.nav('massa')">📦 <span>Baixa em Massa</span></button>
             <button id="nav-est" class="nav-btn" onclick="app.nav('est')">🔄 <span>Estorno</span></button>
@@ -227,6 +240,41 @@
                             <span id="count-vencendo" style="background:var(--alerta-laranja); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
                         </div>
                         <div id="lista-vencendo" class="scroll-vencimento"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="v-sol" class="view hidden">
+                <div class="card">
+                    <h3>Nova Solicitação de Kit</h3>
+                    <label>Protocolo</label>
+                    <select id="sol-prot">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <label>Data de Solicitação</label><input type="date" id="sol-data">
+                    <label>N° de Ordem</label><input type="text" id="sol-ordem" placeholder="Ex: 12345">
+                    <label>Laboratório</label><input type="text" id="sol-lab" placeholder="Ex: Laboratório X">
+                    <label>Data de Recebimento</label><input type="date" id="sol-recebimento">
+                    
+                    <button class="btn-principal" onclick="app.dbSalvarSolicitacao()">SALVAR SOLICITAÇÃO</button>
+                </div>
+
+                <div class="card">
+                    <h3>Solicitações Realizadas</h3>
+                    <div style="overflow-x:auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Protocolo</th>
+                                    <th>Data Solic.</th>
+                                    <th>N° Ordem</th>
+                                    <th>Laboratório</th>
+                                    <th>Recebimento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-solicitacoes"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -323,11 +371,38 @@
 
             <div id="v-mov" class="view hidden">
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
                         <h3>Movimentação</h3>
-                        <input type="text" id="busca-mov" placeholder="Filtrar por nome..." onkeyup="app.renderMov()" style="width:200px; margin-bottom:0">
+                        <div style="display:flex; gap:10px">
+                            <input type="text" id="busca-mov" placeholder="Filtrar por nome..." onkeyup="app.renderMov()" style="width:180px; margin-bottom:0">
+                            <button class="btn-principal" style="width:auto; padding: 10px 15px; font-size: 14px;" onclick="app.abrirModalExport()">📊 Exportar Excel</button>
+
+                        </div>
                     </div>
                     <div id="lista-movimentacao"></div>
+                </div>
+            </div>
+
+            <!-- Modal de Exportação -->
+            <div id="modal-export" class="modal hidden">
+                <div class="modal-content">
+                    <h3>O que deseja exportar?</h3>
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                        <label style="font-size: 12px; color: #666;">Período:</label>
+                        <div style="display: flex; gap: 10px; margin-top: 5px;">
+                            <input type="date" id="exp-inicio" style="font-size: 12px; padding: 8px;">
+                            <input type="date" id="exp-fim" style="font-size: 12px; padding: 8px;">
+                        </div>
+                    </div>
+                    <label class="export-option"><input type="checkbox" id="exp-entrada" checked> Entrada</label>
+                    <label class="export-option"><input type="checkbox" id="exp-saida" checked> Saída</label>
+                    <label class="export-option"><input type="checkbox" id="exp-edicao" checked> Editado</label>
+                    <label class="export-option"><input type="checkbox" id="exp-estorno" checked> Estorno</label>
+                    <label class="export-option"><input type="checkbox" id="exp-solicitacao" checked> Solicitação</label>
+                    <div class="modal-actions">
+                        <button class="btn-modal btn-cancel" onclick="app.fecharModalExport()">CANCELAR</button>
+                        <button class="btn-modal btn-confirm" onclick="app.processarExportacaoAvancada()">EXPORTAR AGORA</button>
+                    </div>
                 </div>
             </div>
 
@@ -335,7 +410,10 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
                         <h3>Logs do Sistema</h3>
-                        <button class="btn-excel" onclick="app.exportarExcel()">📥 Exportar Excel</button>
+                        <div style="display:flex; gap:10px">
+                            <button class="btn-excel" onclick="app.exportarExcel()">📥 Exportar Excel</button>
+
+                        </div>
                     </div>
                     <div id="lista-logs" style="max-height: 500px; overflow-y: auto;"></div>
                 </div>
@@ -350,7 +428,7 @@
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026
+            &copy; Desenvolvido por Milton Rangel em 03/2026 - Versão 1.2
         </footer>
     </div>
 
@@ -369,7 +447,7 @@
                     messagingSenderId: "722436445499",
                     appId: "1:722436445499:web:e4c968164056477d44d31e"
                 },
-                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
+                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "INTAS PHARM 0439", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
                 locais: ["Armário 1", "Armário 2", "Armário 3", "Armário 4", "Armário 5", "Armário 6", "Armário 7", "Armário 8", "Banheiro Antigo", "Monitoria 1", "Monitoria 2", "Sala de Reunião 1", "Sala de Reunião 2"]
             },
             SP: {
@@ -411,11 +489,15 @@
                 document.getElementById('header-logo').src = config.logo;
                 document.getElementById('header-title').innerText = config.title;
                 
-                // Atualizar dropdowns de entrada
+                // Atualizar dropdowns de entrada e solicitação
                 const protSel = document.getElementById('ent-prot');
+                const protSol = document.getElementById('sol-prot');
                 const localSel = document.getElementById('ent-local');
-                protSel.innerHTML = '<option value="">Selecione...</option>' + config.protocolos.map(p => `<option value="${p}">${p}</option>`).join('');
-                localSel.innerHTML = '<option value="">Selecione...</option>' + config.locais.map(l => `<option value="${l}">${l}</option>`).join('');
+                const protOptions = '<option value="">Selecione...</option>' + config.protocolos.map(p => `<option value="${p}">${p}</option>`).join('');
+                
+                if(protSel) protSel.innerHTML = protOptions;
+                if(protSol) protSol.innerHTML = protOptions;
+                if(localSel) localSel.innerHTML = '<option value="">Selecione...</option>' + config.locais.map(l => `<option value="${l}">${l}</option>`).join('');
             },
 
             async login() {
@@ -460,6 +542,7 @@
                     document.getElementById('nav-adm').classList.remove('hidden');
                     document.getElementById('nav-rel').classList.remove('hidden');
                 }
+
                 this.nav('dash');
             },
 
@@ -467,12 +550,19 @@
                 db.ref('/').on('value', (snap) => {
                     const val = snap.val() || {};
                     this.dados.materiais = val.materiais || {};
-                    this.dados.logs = val.logs || {};
+                    this.dados.logs = {};
+                    if(val.logs) {
+                        Object.entries(val.logs).forEach(([id, log]) => {
+                            this.dados.logs[id] = { ...log, id };
+                        });
+                    }
                     this.dados.usuarios = val.usuarios || {};
+                    this.dados.solicitacoes = val.solicitacoes || {};
                     this.renderEstoque();
                     this.renderLogs();
                     this.renderMov();
                     this.renderAdmin();
+                    this.renderSolicitacoes();
                     this.checkVencimento();
                     this.renderProtocolos();
                 });
@@ -489,7 +579,7 @@
 
             limparTodosCampos() {
                 this.limparFormEntrada();
-                ['sai-cod', 'sai-paciente', 'est-cod', 'est-motivo'].forEach(id => {
+                ['sai-cod', 'sai-paciente', 'est-cod', 'est-motivo', 'sol-prot', 'sol-data', 'sol-ordem', 'sol-lab', 'sol-recebimento'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.value = "";
                 });
@@ -672,6 +762,72 @@
                 });
             },
 
+            dbSalvarSolicitacao() {
+                const prot = document.getElementById('sol-prot').value;
+                const dataS = document.getElementById('sol-data').value;
+                const ordem = document.getElementById('sol-ordem').value.trim();
+                const lab = document.getElementById('sol-lab').value.trim();
+                const dataR = document.getElementById('sol-recebimento').value;
+
+                if(!prot || !dataS || !ordem) return alert("Preencha Protocolo, Data de Solicitação e N° de Ordem.");
+
+                const novaSol = { prot, dataS, ordem, lab, dataR };
+                db.ref('solicitacoes').push(novaSol).then(() => {
+                    db.ref('logs').push({
+                        data: new Date().toLocaleString('pt-BR'),
+                        user: this.user.nome,
+                        acao: 'SOLICITAÇÃO',
+                        desc: `Solicitação Kit - Prot: ${prot}`,
+                        meta: novaSol
+                    });
+                    alert("Solicitação salva!");
+                    this.limparTodosCampos();
+                });
+            },
+
+            renderSolicitacoes() {
+                const container = document.getElementById('lista-solicitacoes');
+                if(!container) return;
+                const sols = Object.entries(this.dados.solicitacoes || {}).reverse();
+                container.innerHTML = sols.map(([id, s]) => `
+                    <tr>
+                        <td>${s.prot}</td>
+                        <td>${s.dataS ? s.dataS.split('-').reverse().join('/') : '-'}</td>
+                        <td>${s.ordem}</td>
+                        <td>${s.lab || '-'}</td>
+                        <td>${s.dataR ? s.dataR.split('-').reverse().join('/') : '-'}</td>
+                        <td>
+                            <div style="display:flex; gap:8px; justify-content:center">
+                                ${!s.dataR ? `<button class="btn-edit" title="Confirmar Recebimento" onclick="app.confirmarRecebimento('${id}')">✅</button>` : ''}
+                                <button class="btn-edit" title="Excluir" onclick="app.excluirSolicitacao('${id}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="6">Nenhuma solicitação registrada.</td></tr>';
+            },
+
+            confirmarRecebimento(id) {
+                const hoje = new Date().toISOString().split('T')[0];
+                if(confirm("Confirmar o recebimento deste kit hoje?")) {
+                    db.ref('solicitacoes/' + id).update({ dataR: hoje }).then(() => {
+                        db.ref('logs').push({
+                            data: new Date().toLocaleString('pt-BR'),
+                            user: this.user.nome,
+                            acao: 'RECEBIMENTO',
+                            desc: `Kit Recebido - Prot: ${this.dados.solicitacoes[id].prot}`,
+                            meta: { ...this.dados.solicitacoes[id], dataR: hoje }
+                        });
+                        alert("Recebimento confirmado!");
+                    });
+                }
+            },
+
+            excluirSolicitacao(id) {
+                if(confirm("Deseja excluir esta solicitação?")) {
+                    db.ref('solicitacoes/' + id).remove().then(() => alert("Excluído!"));
+                }
+            },
+
             dbRemover() {
                 const cod = document.getElementById('sai-cod').value.trim();
                 const mot = document.getElementById('sai-motivo').value;
@@ -717,16 +873,85 @@
                 const logs = Object.values(this.dados.logs).reverse().filter(l => l.desc.toLowerCase().includes(busca));
                 document.getElementById('lista-movimentacao').innerHTML = logs.slice(0,100).map(l => {
                     const m = l.meta || {};
-                    let cor = 'bg-entrada'; if(l.acao.includes('SAÍDA')) cor = 'bg-saida'; if(l.acao === 'ESTORNO' || l.acao === 'EDIÇÃO') cor = 'bg-estorno';
+                    let cor = 'bg-entrada'; 
+                    if(l.acao.includes('SAÍDA')) cor = 'bg-saida'; 
+                    if(l.acao === 'ESTORNO' || l.acao === 'EDIÇÃO') cor = 'bg-estorno';
+                    if(l.acao === 'SOLICITAÇÃO' || l.acao === 'RECEBIMENTO') cor = 'bg-solicitacao';
+
                     let extra = m.mot ? `<br><b>Motivo:</b> ${m.mot}` : "";
                     if(l.acao === 'SAÍDA' && m.mot === 'Consumo' && m.pac) extra += ` | <b>Paciente:</b> ${m.pac}`;
                     if(l.acao === 'ESTORNO' && m.mot_estorno) extra = `<br><b>Motivo Estorno:</b> ${m.mot_estorno}`;
-                    return `<div class="log-row"><span><span class="badge-mov ${cor}">${l.acao}</span> <b>${l.desc}</b><span class="info-detalhada">Cód: ${m.cod || '-'} | Prot: ${m.prot || '-'}${extra}<br>Resp: ${l.user}</span></span><small>${l.data}</small></div>`;
+                    if(l.acao === 'SOLICITAÇÃO') extra = `<br><b>N° Ordem:</b> ${m.ordem} | <b>Lab:</b> ${m.lab || '-'}`;
+                    if(l.acao === 'RECEBIMENTO') extra = `<br><b>N° Ordem:</b> ${m.ordem} | <b>Recebido em:</b> ${m.dataR.split('-').reverse().join('/')}`;
+
+                    const btnDel = (this.user.login === 'login americas') ? `<button class="btn-edit" style="margin-left:10px; color:var(--vermelho)" onclick="app.excluirLog('${l.id}')">🗑️</button>` : '';
+                    return `<div class="log-row"><span><span class="badge-mov ${cor}">${l.acao}</span> <b>${l.desc}</b><span class="info-detalhada">Cód: ${m.cod || '-'} | Prot: ${m.prot || '-'}${extra}<br>Resp: ${l.user}</span></span><div style="display:flex; align-items:center"><small>${l.data}</small>${btnDel}</div></div>`;
                 }).join('');
             },
 
+            abrirModalExport() { document.getElementById('modal-export').classList.remove('hidden'); },
+            fecharModalExport() { document.getElementById('modal-export').classList.add('hidden'); },
+
+            processarExportacaoAvancada() {
+                const inicio = document.getElementById('exp-inicio').value;
+                const fim = document.getElementById('exp-fim').value;
+
+                const filtros = {
+                    'ENTRADA': document.getElementById('exp-entrada').checked,
+                    'SAÍDA': document.getElementById('exp-saida').checked,
+                    'EDIÇÃO': document.getElementById('exp-edicao').checked,
+                    'ESTORNO': document.getElementById('exp-estorno').checked,
+                    'SOLICITAÇÃO': document.getElementById('exp-solicitacao').checked,
+                    'RECEBIMENTO': document.getElementById('exp-solicitacao').checked
+                };
+
+                const logsFiltrados = Object.values(this.dados.logs).filter(l => {
+                    // Filtro de Ação
+                    const acaoLimpa = l.acao.split(' ')[0];
+                    const acaoOk = filtros[acaoLimpa] || filtros[l.acao];
+                    if(!acaoOk) return false;
+
+                    // Filtro de Data
+                    if(inicio || fim) {
+                        const dataLogStr = l.data.split(' ')[0].split('/').reverse().join('-'); // Converte 07/05/2026 para 2026-05-07
+                        if(inicio && dataLogStr < inicio) return false;
+                        if(fim && dataLogStr > fim) return false;
+                    }
+
+                    return true;
+                });
+
+                if(logsFiltrados.length === 0) return alert("Nenhum dado encontrado para os filtros e período selecionados.");
+
+                const dadosExcel = logsFiltrados.map(l => {
+                    const m = l.meta || {};
+                    const [data, hora] = l.data.split(' ');
+                    return {
+                        'Data': data,
+                        'Hora': hora,
+                        'Responsável': l.user,
+                        'Ação': l.acao,
+                        'Descrição': l.desc,
+                        'Código de Barras': m.cod || '-',
+                        'Protocolo': m.prot || '-',
+                        'Motivo/Paciente/Lab': m.mot || m.pac || m.lab || m.mot_estorno || '-',
+                        'N° Ordem': m.ordem || '-'
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(dadosExcel);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Movimentação Filtrada");
+                XLSX.writeFile(wb, `Relatorio_Movimentacao_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
+                this.fecharModalExport();
+            },
+
             renderLogs() {
-                document.getElementById('lista-logs').innerHTML = Object.values(this.dados.logs).reverse().slice(0,100).map(l => `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span></div>`).join('');
+                const logs = Object.entries(this.dados.logs).reverse().slice(0,100);
+                document.getElementById('lista-logs').innerHTML = logs.map(([id, l]) => {
+                    const btnDel = (this.user.login === 'login americas') ? `<button class="btn-edit" style="margin-left:10px; color:var(--vermelho)" onclick="app.excluirLog('${id}')">🗑️</button>` : '';
+                    return `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span>${btnDel}</div>`;
+                }).join('');
             },
 
             renderAdmin() {
@@ -750,6 +975,14 @@
                         </div>
                     </div>
                 `).join('');
+            },
+
+            excluirLog(id) {
+                if(confirm("Deseja apagar este registro permanentemente?")) {
+                    db.ref('logs/' + id).remove().then(() => {
+                        alert("Registro removido.");
+                    });
+                }
             },
 
             toggleUser(id, status) { db.ref('usuarios/' + id).update({ ativo: status }); },
