@@ -13,6 +13,7 @@
     <!-- Bibliotecas Externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     
     <style>
         :root {
@@ -125,6 +126,50 @@
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--escuro); color: #cbb2ff; text-align: center; padding: 10px; font-size: 12px; z-index: 1001; }
 
         @media (max-width: 768px) { .sidebar { width: 60px; } .nav-btn span { display: none; } main { margin-left: 60px; } }
+
+        /* Estilos de Impressão de Etiquetas */
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao-etiquetas, #area-impressao-etiquetas * { visibility: visible; }
+            #area-impressao-etiquetas { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            .etiqueta-print { 
+                width: 50mm; 
+                height: 40mm; 
+                border: 0.1mm solid #eee; 
+                padding: 2mm; 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                justify-content: center; 
+                page-break-inside: avoid;
+                float: left;
+                overflow: hidden;
+            }
+            .etiqueta-print h5 { margin: 0; font-size: 9pt; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; font-weight: bold; }
+            .etiqueta-print p { margin: 1mm 0; font-size: 7pt; font-weight: 600; }
+            .etiqueta-print svg { max-width: 48mm; max-height: 22mm; }
+        }
+
+        .etiqueta-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+        .etiqueta-preview {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .etiqueta-preview svg { width: 100%; height: auto; }
     </style>
 </head>
 <body>
@@ -179,6 +224,7 @@
             <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')">📤 <span>Saída de Kit</span></button>
             <button id="nav-massa" class="nav-btn" onclick="app.nav('massa')">📦 <span>Baixa em Massa</span></button>
             <button id="nav-est" class="nav-btn" onclick="app.nav('est')">🔄 <span>Estorno</span></button>
+            <button id="nav-etiq" class="nav-btn" onclick="app.nav('etiq')">🏷️ <span>Gerar Etiquetas</span></button>
             <button id="nav-mov" class="nav-btn" onclick="app.nav('mov')">📑 <span>Movimentação</span></button>
             <button id="nav-rel" class="nav-btn hidden" onclick="app.nav('rel')">📜 <span>Logs</span></button>
             <button id="nav-adm" class="nav-btn hidden" onclick="app.nav('adm')">👥 <span>Colaboradores</span></button>
@@ -369,6 +415,45 @@
                 </div>
             </div>
 
+            <div id="v-etiq" class="view hidden">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                        <h3>Gerador de Etiquetas Profissional</h3>
+                        <button class="btn-principal" style="width:auto; padding:8px 15px; font-size:12px; background:#666" onclick="app.limparGeradorEtiq()">🧹 Limpar Lista</button>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 100px; gap:15px; align-items: flex-end; background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                        <div>
+                            <label>Nome do Kit</label>
+                            <input type="text" id="etiq-nome" placeholder="Ex: Kit Coleta Sangue" style="margin-bottom:0">
+                        </div>
+                        <div>
+                            <label>Protocolo</label>
+                            <select id="etiq-prot" style="margin-bottom:0">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Qtd.</label>
+                            <input type="number" id="etiq-qtd" value="1" min="1" max="50" style="margin-bottom:0">
+                        </div>
+                        <button class="btn-principal" style="grid-column: span 3;" onclick="app.adicionarEtiquetasLote()">➕ ADICIONAR À LISTA DE IMPRESSÃO</button>
+                    </div>
+
+                    <div id="resultado-etiqueta" class="hidden" style="border-top:1px solid #eee; padding-top:20px">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                            <h4 id="etiq-status">Lista de Impressão (5x4cm)</h4>
+                            <button class="btn-principal" style="width:auto; padding:10px 25px; background:var(--roxo)" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                        </div>
+                        
+                        <div id="etiq-preview-list" class="etiqueta-preview-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área oculta para impressão (5x4cm) -->
+            <div id="area-impressao-etiquetas" class="hidden"></div>
+
             <div id="v-mov" class="view hidden">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
@@ -428,7 +513,7 @@
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026 - Versão 1.2
+            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.3
         </footer>
     </div>
 
@@ -447,7 +532,7 @@
                     messagingSenderId: "722436445499",
                     appId: "1:722436445499:web:e4c968164056477d44d31e"
                 },
-                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "INTAS PHARM 0439", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
+                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
                 locais: ["Armário 1", "Armário 2", "Armário 3", "Armário 4", "Armário 5", "Armário 6", "Armário 7", "Armário 8", "Banheiro Antigo", "Monitoria 1", "Monitoria 2", "Sala de Reunião 1", "Sala de Reunião 2"]
             },
             SP: {
@@ -498,6 +583,9 @@
                 if(protSel) protSel.innerHTML = protOptions;
                 if(protSol) protSol.innerHTML = protOptions;
                 if(localSel) localSel.innerHTML = '<option value="">Selecione...</option>' + config.locais.map(l => `<option value="${l}">${l}</option>`).join('');
+                
+                const etiqProt = document.getElementById('etiq-prot');
+                if(etiqProt) etiqProt.innerHTML = '<option value="">Selecione o protocolo...</option>' + config.protocolos.map(p => `<option value="${p}">${p}</option>`).join('');
             },
 
             async login() {
@@ -760,6 +848,55 @@
                     db.ref('logs').push({ data: new Date().toLocaleString('pt-BR'), user: this.user.nome, acao, desc: nome, meta: { cod, prot, venc, local } });
                     alert("Sucesso!"); this.limparFormEntrada();
                 });
+            },
+
+            limparGeradorEtiq() {
+                document.getElementById('etiq-preview-list').innerHTML = "";
+                document.getElementById('area-impressao-etiquetas').innerHTML = "";
+                document.getElementById('resultado-etiqueta').classList.add('hidden');
+                this.etiqCount = 0;
+            },
+
+            adicionarEtiquetasLote() {
+                const nome = document.getElementById('etiq-nome').value.trim();
+                const prot = document.getElementById('etiq-prot').value;
+                const qtd = parseInt(document.getElementById('etiq-qtd').value) || 1;
+
+                if(!nome || !prot) return alert("Preencha o nome do kit e selecione o protocolo.");
+                
+                const previewList = document.getElementById('etiq-preview-list');
+                const printArea = document.getElementById('area-impressao-etiquetas');
+                if(!this.etiqCount) this.etiqCount = 0;
+
+                for(let i=0; i < qtd; i++) {
+                    this.etiqCount++;
+                    
+                    // Gerar código único de 15 dígitos que não existe no estoque
+                    let codigo;
+                    do {
+                        codigo = "";
+                        for(let c=0; c<15; c++) codigo += Math.floor(Math.random() * 10);
+                    } while(this.dados.materiais[codigo]);
+
+                    // Elemento para o Preview na tela
+                    const divPreview = document.createElement('div');
+                    divPreview.className = 'etiqueta-preview';
+                    divPreview.innerHTML = `<small>#${this.etiqCount}</small><h5>${nome}</h5><p>${prot}</p><svg id="bc-pre-${this.etiqCount}"></svg>`;
+                    previewList.appendChild(divPreview);
+
+                    // Elemento para a Impressão (50x40mm)
+                    const divPrint = document.createElement('div');
+                    divPrint.className = 'etiqueta-print';
+                    divPrint.innerHTML = `<h5>${nome}</h5><p>${prot}</p><svg id="bc-pri-${this.etiqCount}"></svg>`;
+                    printArea.appendChild(divPrint);
+
+                    // Renderizar Barcodes (Mais altos para melhor leitura)
+                    JsBarcode(`#bc-pre-${this.etiqCount}`, codigo, { format: "CODE128", width: 1.2, height: 60, fontSize: 12 });
+                    JsBarcode(`#bc-pri-${this.etiqCount}`, codigo, { format: "CODE128", width: 1.8, height: 85, fontSize: 14 });
+                }
+
+                document.getElementById('resultado-etiqueta').classList.remove('hidden');
+                document.getElementById('etiq-status').innerText = `${this.etiqCount} Etiquetas na Lista`;
             },
 
             dbSalvarSolicitacao() {
