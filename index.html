@@ -240,7 +240,10 @@
 
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px">
-                        <h3>Estoque Atual</h3>
+                        <div style="display:flex; align-items:center; gap:10px">
+                            <h3>Estoque Atual</h3>
+                            <button onclick="app.abrirModalExportEstoque()" style="background:none; border:none; cursor:pointer; font-size:18px;" title="Exportar Estoque Atual">📊</button>
+                        </div>
                         <div style="display:flex; gap:10px">
                             <select id="filtro-coluna" onchange="app.resetPaginacao()" style="width:120px; margin-bottom:0">
                                 <option value="nome">Nome</option>
@@ -517,10 +520,30 @@
                     <div id="lista-users"></div>
                 </div>
             </div>
+
+            <!-- Modal Exportação Estoque -->
+            <div id="modal-export-estoque" class="modal hidden">
+                <div class="modal-content">
+                    <h3>Exportar Estoque</h3>
+                    <p style="font-size: 14px; margin-bottom: 20px; color: #666;">Selecione o que deseja incluir no relatório:</p>
+                    <label class="export-option">
+                        <input type="radio" name="exp-estoque-tipo" value="filtrado" checked> 
+                        Apenas o que está na tela (Filtros ativos)
+                    </label>
+                    <label class="export-option">
+                        <input type="radio" name="exp-estoque-tipo" value="total"> 
+                        Estoque Total (Tudo o que está cadastrado)
+                    </label>
+                    <div class="modal-actions">
+                        <button class="btn-modal btn-cancel" onclick="app.fecharModalExportEstoque()">Cancelar</button>
+                        <button class="btn-modal btn-confirm" onclick="app.processarExportacaoEstoque()">Exportar Excel</button>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.3
+            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.4
         </footer>
     </div>
 
@@ -695,15 +718,21 @@
                 const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
                 const dadosPagina = todosFiltrados.slice(inicio, inicio + this.itensPorPagina);
                 
-                document.getElementById('lista-est').innerHTML = dadosPagina.map(m => `
+                document.getElementById('lista-est').innerHTML = dadosPagina.map(m => {
+                    const btnDel = (this.user.login === 'login americas') ? `<button class="btn-edit" style="color:var(--vermelho); margin-left:8px;" onclick="app.excluirKit('${m.cod}')">🗑️</button>` : '';
+                    return `
                     <tr>
                         <td>${m.cod}</td>
                         <td style="text-align:left"><b>${m.nome}</b></td>
                         <td>${m.prot || '-'}</td>
                         <td>${m.local || '-'}</td>
                         <td>${m.venc ? m.venc.split('-').reverse().join('/') : '-'}</td>
-                        <td><button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button></td>
-                    </tr>`).join('');
+                        <td>
+                            <button class="btn-edit" onclick="app.prepararEdicao('${m.cod}')">✏️</button>
+                            ${btnDel}
+                        </td>
+                    </tr>`;
+                }).join('');
                 
                 document.getElementById('count-itens').innerText = todosFiltrados.length;
                 this.renderPaginacao(totalPaginas);
@@ -719,6 +748,22 @@
 
             mudarPagina(delta) { this.paginaAtual += delta; this.renderEstoque(); },
             resetPaginacao() { this.paginaAtual = 1; this.renderEstoque(); },
+
+            excluirKit(cod) {
+                if(confirm(`Deseja apagar o kit [${cod}] permanentemente do estoque?`)) {
+                    const item = this.dados.materiais[cod];
+                    db.ref('materiais/' + cod).remove().then(() => {
+                        db.ref('logs').push({
+                            data: new Date().toLocaleString('pt-BR'),
+                            user: this.user.nome,
+                            acao: 'EXCLUSÃO',
+                            desc: item.nome,
+                            meta: { cod, prot: item.prot, venc: item.venc }
+                        });
+                        alert("Kit removido com sucesso!");
+                    });
+                }
+            },
 
             renderProtocolos() {
                 const counts = {};
@@ -1055,6 +1100,38 @@
 
             abrirModalExport() { document.getElementById('modal-export').classList.remove('hidden'); },
             fecharModalExport() { document.getElementById('modal-export').classList.add('hidden'); },
+
+            abrirModalExportEstoque() { document.getElementById('modal-export-estoque').classList.remove('hidden'); },
+            fecharModalExportEstoque() { document.getElementById('modal-export-estoque').classList.add('hidden'); },
+
+            processarExportacaoEstoque() {
+                const tipo = document.querySelector('input[name="exp-estoque-tipo"]:checked').value;
+                let lista = [];
+
+                if(tipo === 'filtrado') {
+                    const col = document.getElementById('filtro-coluna').value;
+                    const busca = document.getElementById('busca').value.toLowerCase();
+                    lista = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
+                } else {
+                    lista = Object.values(this.dados.materiais);
+                }
+
+                if(lista.length === 0) return alert("Nenhum item para exportar.");
+
+                const dadosExcel = lista.map(m => ({
+                    'Código': m.cod,
+                    'Nome do Kit': m.nome,
+                    'Protocolo': m.prot || '-',
+                    'Local': m.local || '-',
+                    'Vencimento': m.venc ? m.venc.split('-').reverse().join('/') : '-'
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dadosExcel);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Estoque Atual");
+                XLSX.writeFile(wb, `Estoque_Atual_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
+                this.fecharModalExportEstoque();
+            },
 
             processarExportacaoAvancada() {
                 const inicio = document.getElementById('exp-inicio').value;
