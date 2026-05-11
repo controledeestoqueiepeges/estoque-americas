@@ -59,21 +59,22 @@
         .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th { background: #f8f9fa; padding: 12px; font-size: 13px; color: var(--escuro); text-transform: uppercase; border: 1px solid #dee2e6; }
-        td { padding: 10px; border: 1px solid #dee2e6; font-size: 14px; text-align: center; }
+        th { background: #f8f9fa; padding: 6px 4px; font-size: 11px; color: var(--escuro); text-transform: uppercase; border: 1px solid #dee2e6; }
+        td { padding: 4px 6px; border: 1px solid #dee2e6; font-size: 12px; text-align: center; line-height: 1.2; }
         
-        .btn-edit { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--azul-principal); }
+        .btn-edit { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--azul-principal); padding: 2px; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; background: white; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
         
         .btn-principal { background: var(--roxo); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: 0.3s; }
         .btn-principal:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6; }
         
-        .protocol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
-        .protocol-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 15px; text-align: center; transition: 0.3s; }
-        .protocol-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: var(--roxo); }
-        .protocol-card h4 { margin: 0; font-size: 14px; color: var(--escuro); }
-        .protocol-card .count { font-size: 24px; font-weight: bold; color: var(--roxo); margin-top: 5px; }
+        .protocol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 15px; }
+        .protocol-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 4px; text-align: center; transition: 0.3s; cursor: pointer; min-height: 65px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .protocol-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: var(--roxo); background: #f0f0ff; }
+        .protocol-card:active { transform: scale(0.96); }
+        .protocol-card h4 { margin: 0; font-size: 10px; color: var(--escuro); line-height: 1.1; font-weight: 700; text-transform: uppercase; word-wrap: break-word; }
+        .protocol-card .count { font-size: 18px; font-weight: 800; color: var(--roxo); margin-top: 2px; }
 
         .alert-item { padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px; border-left: 5px solid; line-height: 1.4; text-align: left; cursor: pointer; transition: transform 0.2s; }
         .alert-item:hover { transform: scale(1.02); opacity: 0.9; }
@@ -276,14 +277,20 @@
                     <div class="card" style="border-left: 5px solid var(--vermelho)">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                             <h4 style="margin:0; font-size:14px; color:var(--vermelho);">Itens Vencidos</h4>
-                            <span id="count-vencidos" style="background:var(--vermelho); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
+                            <div style="display:flex; align-items:center; gap:8px">
+                                <button onclick="app.exportarVencimento('vencidos')" style="background:none; border:none; cursor:pointer; font-size:16px;" title="Exportar Vencidos">📊</button>
+                                <span id="count-vencidos" style="background:var(--vermelho); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
+                            </div>
                         </div>
                         <div id="lista-quarentena" class="scroll-vencimento"></div>
                     </div>
                     <div class="card" style="border-left: 5px solid var(--alerta-laranja)">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                             <h4 style="margin:0; font-size:14px; color:var(--alerta-laranja);">Vencendo (45 dias)</h4>
-                            <span id="count-vencendo" style="background:var(--alerta-laranja); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
+                            <div style="display:flex; align-items:center; gap:8px">
+                                <button onclick="app.exportarVencimento('vencendo')" style="background:none; border:none; cursor:pointer; font-size:16px;" title="Exportar Vencendo">📊</button>
+                                <span id="count-vencendo" style="background:var(--alerta-laranja); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
+                            </div>
                         </div>
                         <div id="lista-vencendo" class="scroll-vencimento"></div>
                     </div>
@@ -719,12 +726,32 @@
                     const p = m.prot || 'Sem Protocolo';
                     counts[p] = (counts[p] || 0) + 1;
                 });
-                document.getElementById('lista-protocolos').innerHTML = Object.entries(counts).map(([p, c]) => `
-                    <div class="protocol-card">
+
+                // Ordenar protocolos de forma alfanumérica
+                const ordenados = Object.entries(counts).sort((a, b) => {
+                    return a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' });
+                });
+
+                document.getElementById('lista-protocolos').innerHTML = ordenados.map(([p, c]) => `
+                    <div class="protocol-card" onclick="app.filtrarPorProtocolo('${p}')">
                         <h4>${p}</h4>
                         <div class="count">${c}</div>
                     </div>
                 `).join('');
+            },
+
+            filtrarPorProtocolo(protocolo) {
+                const filtroCol = document.getElementById('filtro-coluna');
+                const buscaInput = document.getElementById('busca');
+                
+                if(filtroCol && buscaInput) {
+                    filtroCol.value = 'prot';
+                    buscaInput.value = protocolo === 'Sem Protocolo' ? '' : protocolo;
+                    this.resetPaginacao();
+                    
+                    // Rolar suavemente até a tabela de estoque
+                    document.getElementById('busca').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             },
 
             checkVencimento() {
@@ -1161,6 +1188,37 @@
                     view.style.display = 'none';
                     if(isEstorno) this.buscarEstorno(code);
                 });
+            },
+
+            exportarVencimento(tipo) {
+                const hoje = new Date();
+                const limite = new Date(); limite.setDate(hoje.getDate() + 45);
+                const lista = [];
+
+                Object.values(this.dados.materiais).forEach(m => {
+                    if(!m.venc) return;
+                    const dv = new Date(m.venc + "T00:00:00");
+                    if(tipo === 'vencidos' && dv < hoje) {
+                        lista.push(m);
+                    } else if(tipo === 'vencendo' && dv >= hoje && dv <= limite) {
+                        lista.push(m);
+                    }
+                });
+
+                if(lista.length === 0) return alert("Nenhum item para exportar.");
+
+                const dadosExcel = lista.map(m => ({
+                    'Código': m.cod,
+                    'Nome do Kit': m.nome,
+                    'Protocolo': m.prot || '-',
+                    'Local': m.local || '-',
+                    'Vencimento': m.venc.split('-').reverse().join('/')
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dadosExcel);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, tipo === 'vencidos' ? "Kits Vencidos" : "Kits a Vencer");
+                XLSX.writeFile(wb, `Relatorio_${tipo}_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
             },
 
             exportarExcel() {
