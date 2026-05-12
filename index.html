@@ -525,7 +525,8 @@
             <div id="modal-export-estoque" class="modal hidden">
                 <div class="modal-content">
                     <h3>Exportar Estoque</h3>
-                    <p style="font-size: 14px; margin-bottom: 20px; color: #666;">Selecione o que deseja incluir no relatório:</p>
+                    
+                    <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--roxo);">1. ABRANGÊNCIA:</p>
                     <label class="export-option">
                         <input type="radio" name="exp-estoque-tipo" value="filtrado" checked> 
                         Apenas o que está na tela (Filtros ativos)
@@ -534,9 +535,24 @@
                         <input type="radio" name="exp-estoque-tipo" value="total"> 
                         Estoque Total (Tudo o que está cadastrado)
                     </label>
+
+                    <p style="font-size: 12px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: var(--roxo);">2. FORMATO DO RELATÓRIO:</p>
+                    <label class="export-option">
+                        <input type="radio" name="exp-estoque-formato" value="detalhado" checked> 
+                        Lista Detalhada (Item por item com Código)
+                    </label>
+                    <label class="export-option">
+                        <input type="radio" name="exp-estoque-formato" value="vencimento"> 
+                        Consolidado por Vencimento (Qtd por Validade)
+                    </label>
+                    <label class="export-option">
+                        <input type="radio" name="exp-estoque-formato" value="kit"> 
+                        Resumo por Kit (Total Geral por Nome)
+                    </label>
+
                     <div class="modal-actions">
                         <button class="btn-modal btn-cancel" onclick="app.fecharModalExportEstoque()">Cancelar</button>
-                        <button class="btn-modal btn-confirm" onclick="app.processarExportacaoEstoque()">Exportar Excel</button>
+                        <button class="btn-modal btn-confirm" onclick="app.processarExportacaoEstoque()">Gerar Excel</button>
                     </div>
                 </div>
             </div>
@@ -1106,30 +1122,68 @@
 
             processarExportacaoEstoque() {
                 const tipo = document.querySelector('input[name="exp-estoque-tipo"]:checked').value;
-                let lista = [];
+                const formato = document.querySelector('input[name="exp-estoque-formato"]:checked').value;
+                let listaRaw = [];
 
                 if(tipo === 'filtrado') {
                     const col = document.getElementById('filtro-coluna').value;
                     const busca = document.getElementById('busca').value.toLowerCase();
-                    lista = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
+                    listaRaw = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
                 } else {
-                    lista = Object.values(this.dados.materiais);
+                    listaRaw = Object.values(this.dados.materiais);
                 }
 
-                if(lista.length === 0) return alert("Nenhum item para exportar.");
+                if(listaRaw.length === 0) return alert("Nenhum item para exportar.");
 
-                const dadosExcel = lista.map(m => ({
-                    'Código': m.cod,
-                    'Nome do Kit': m.nome,
-                    'Protocolo': m.prot || '-',
-                    'Local': m.local || '-',
-                    'Vencimento': m.venc ? m.venc.split('-').reverse().join('/') : '-'
-                }));
+                let dadosExcel = [];
+                let nomePlanilha = "Estoque";
+
+                if(formato === 'detalhado') {
+                    dadosExcel = listaRaw.map(m => ({
+                        'Código': m.cod,
+                        'Nome do Kit': m.nome,
+                        'Protocolo': m.prot || '-',
+                        'Local': m.local || '-',
+                        'Vencimento': m.venc ? m.venc.split('-').reverse().join('/') : '-'
+                    }));
+                    nomePlanilha = "Estoque Detalhado";
+                } else if(formato === 'vencimento') {
+                    const consolidado = {};
+                    listaRaw.forEach(m => {
+                        const chave = `${m.nome}|${m.prot || 'Sem Protocolo'}|${m.venc || 'Sem Vencimento'}|${m.local || 'Sem Local'}`;
+                        if(!consolidado[chave]) {
+                            consolidado[chave] = {
+                                'Nome do Kit': m.nome,
+                                'Protocolo': m.prot || '-',
+                                'Vencimento': m.venc ? m.venc.split('-').reverse().join('/') : '-',
+                                'Local': m.local || '-',
+                                'Total de Kits': 0
+                            };
+                        }
+                        consolidado[chave]['Total de Kits']++;
+                    });
+                    dadosExcel = Object.values(consolidado);
+                    nomePlanilha = "Resumo por Vencimento";
+                } else if(formato === 'kit') {
+                    const porKit = {};
+                    listaRaw.forEach(m => {
+                        const chave = m.nome;
+                        if(!porKit[chave]) {
+                            porKit[chave] = {
+                                'Nome do Kit': m.nome,
+                                'Total em Estoque': 0
+                            };
+                        }
+                        porKit[chave]['Total em Estoque']++;
+                    });
+                    dadosExcel = Object.values(porKit);
+                    nomePlanilha = "Resumo por Kit";
+                }
 
                 const ws = XLSX.utils.json_to_sheet(dadosExcel);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Estoque Atual");
-                XLSX.writeFile(wb, `Estoque_Atual_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
+                XLSX.utils.book_append_sheet(wb, ws, nomePlanilha);
+                XLSX.writeFile(wb, `${nomePlanilha}_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
                 this.fecharModalExportEstoque();
             },
 
