@@ -357,7 +357,13 @@
                         <option value="">Selecione...</option>
                     </select>
                     
-                    <label>Data de Validade</label><input type="date" id="ent-venc">
+                    <label>Data de Validade</label>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px">
+                        <input type="date" id="ent-venc" style="margin-bottom:0">
+                        <label style="margin-bottom:0; display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer; white-space:nowrap">
+                            <input type="checkbox" id="ent-sem-venc" onchange="app.toggleSemVenc(this.checked)" style="width:16px; height:16px; margin-bottom:0"> Sem Vencimento
+                        </label>
+                    </div>
                     
                     <div style="display:flex; gap:10px">
                         <button id="btn-salvar-ent" class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
@@ -494,6 +500,7 @@
                     <label class="export-option"><input type="checkbox" id="exp-edicao" checked> Editado</label>
                     <label class="export-option"><input type="checkbox" id="exp-estorno" checked> Estorno</label>
                     <label class="export-option"><input type="checkbox" id="exp-solicitacao" checked> Solicitação</label>
+                    <label class="export-option"><input type="checkbox" id="exp-recebimento" checked> Recebimento</label>
                     <div class="modal-actions">
                         <button class="btn-modal btn-cancel" onclick="app.fecharModalExport()">CANCELAR</button>
                         <button class="btn-modal btn-confirm" onclick="app.processarExportacaoAvancada()">EXPORTAR AGORA</button>
@@ -681,20 +688,23 @@
             },
 
             init() {
+                // Buscar os últimos 1000 logs para garantir histórico longo
+                db.ref('logs').limitToLast(1000).on('value', (snap) => {
+                    this.dados.logs = {};
+                    const logs = snap.val() || {};
+                    Object.entries(logs).forEach(([id, log]) => {
+                        this.dados.logs[id] = { ...log, id };
+                    });
+                    this.renderLogs();
+                    this.renderMov();
+                });
+
                 db.ref('/').on('value', (snap) => {
                     const val = snap.val() || {};
                     this.dados.materiais = val.materiais || {};
-                    this.dados.logs = {};
-                    if(val.logs) {
-                        Object.entries(val.logs).forEach(([id, log]) => {
-                            this.dados.logs[id] = { ...log, id };
-                        });
-                    }
                     this.dados.usuarios = val.usuarios || {};
                     this.dados.solicitacoes = val.solicitacoes || {};
                     this.renderEstoque();
-                    this.renderLogs();
-                    this.renderMov();
                     this.renderAdmin();
                     this.renderSolicitacoes();
                     this.checkVencimento();
@@ -902,6 +912,10 @@
                 document.getElementById('ent-nome').value = item.nome;
                 document.getElementById('ent-prot').value = item.prot || "";
                 document.getElementById('ent-local').value = item.local || "";
+                
+                const semVenc = !item.venc || item.venc === "";
+                document.getElementById('ent-sem-venc').checked = semVenc;
+                this.toggleSemVenc(semVenc);
                 document.getElementById('ent-venc').value = item.venc || "";
             },
 
@@ -917,6 +931,20 @@
                 const ic = document.getElementById('ent-cod');
                 ic.value = ""; ic.readOnly = false; ic.style.background = "white";
                 ['ent-nome','ent-prot','ent-local','ent-venc'].forEach(id => document.getElementById(id).value = "");
+                document.getElementById('ent-sem-venc').checked = false;
+                this.toggleSemVenc(false);
+            },
+
+            toggleSemVenc(checked) {
+                const input = document.getElementById('ent-venc');
+                if(checked) {
+                    input.value = "";
+                    input.disabled = true;
+                    input.style.background = "#eee";
+                } else {
+                    input.disabled = false;
+                    input.style.background = "white";
+                }
             },
 
             dbSalvar() {
@@ -924,8 +952,12 @@
                 const nome = document.getElementById('ent-nome').value.trim();
                 const prot = document.getElementById('ent-prot').value;
                 const local = document.getElementById('ent-local').value;
-                const venc = document.getElementById('ent-venc').value;
-                if(!cod || !nome) return alert("Preencha Código e Nome.");
+                const semVenc = document.getElementById('ent-sem-venc').checked;
+                const venc = semVenc ? "" : document.getElementById('ent-venc').value;
+
+                if(!cod || !nome || !prot || !local || (!semVenc && !venc)) {
+                    return alert("⚠️ ERRO: Todos os campos são obrigatórios para registrar a entrada!");
+                }
 
                 if(!document.getElementById('ent-cod').readOnly && this.dados.materiais[cod]) {
                     return alert("⚠️ ERRO: Este código de kit já existe no estoque!");
@@ -1096,7 +1128,7 @@
             renderMov() {
                 const busca = document.getElementById('busca-mov').value.toLowerCase();
                 const logs = Object.values(this.dados.logs).reverse().filter(l => l.desc.toLowerCase().includes(busca));
-                document.getElementById('lista-movimentacao').innerHTML = logs.slice(0,100).map(l => {
+                document.getElementById('lista-movimentacao').innerHTML = logs.slice(0,1000).map(l => {
                     const m = l.meta || {};
                     let cor = 'bg-entrada'; 
                     if(l.acao.includes('SAÍDA')) cor = 'bg-saida'; 
@@ -1197,20 +1229,37 @@
                     'EDIÇÃO': document.getElementById('exp-edicao').checked,
                     'ESTORNO': document.getElementById('exp-estorno').checked,
                     'SOLICITAÇÃO': document.getElementById('exp-solicitacao').checked,
-                    'RECEBIMENTO': document.getElementById('exp-solicitacao').checked
+                    'RECEBIMENTO': document.getElementById('exp-recebimento').checked
                 };
 
                 const logsFiltrados = Object.values(this.dados.logs).filter(l => {
-                    // Filtro de Ação
-                    const acaoLimpa = l.acao.split(' ')[0];
-                    const acaoOk = filtros[acaoLimpa] || filtros[l.acao];
+                    // 1. FILTRO DE AÇÃO (Mais flexível)
+                    const acaoLog = (l.acao || "").toUpperCase();
+                    let acaoOk = false;
+                    
+                    if(filtros['ENTRADA'] && acaoLog.includes('ENTRADA')) acaoOk = true;
+                    if(filtros['SAÍDA'] && acaoLog.includes('SAÍDA')) acaoOk = true;
+                    if(filtros['EDIÇÃO'] && acaoLog.includes('EDIÇÃO')) acaoOk = true;
+                    if(filtros['ESTORNO'] && acaoLog.includes('ESTORNO')) acaoOk = true;
+                    if(filtros['SOLICITAÇÃO'] && acaoLog.includes('SOLICITAÇÃO')) acaoOk = true;
+                    if(filtros['RECEBIMENTO'] && acaoLog.includes('RECEBIMENTO')) acaoOk = true;
+
                     if(!acaoOk) return false;
 
-                    // Filtro de Data
+                    // 2. FILTRO DE DATA (Lógica Ultra-Robusta)
                     if(inicio || fim) {
-                        const dataLogStr = l.data.split(' ')[0].split('/').reverse().join('-'); // Converte 07/05/2026 para 2026-05-07
-                        if(inicio && dataLogStr < inicio) return false;
-                        if(fim && dataLogStr > fim) return false;
+                        // Extrai apenas os números da data (ignora vírgulas, horas, etc)
+                        // l.data costuma ser "DD/MM/AAAA HH:MM:SS" ou "DD/MM/AAAA, HH:MM:SS"
+                        const match = l.data.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                        if(!match) return false;
+
+                        const dia = match[1].padStart(2, '0');
+                        const mes = match[2].padStart(2, '0');
+                        const ano = match[3];
+                        const dataLogISO = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+                        
+                        if(inicio && dataLogISO < inicio) return false;
+                        if(fim && dataLogISO > fim) return false;
                     }
 
                     return true;
@@ -1242,7 +1291,7 @@
             },
 
             renderLogs() {
-                const logs = Object.entries(this.dados.logs).reverse().slice(0,100);
+                const logs = Object.entries(this.dados.logs).reverse().slice(0,1000);
                 document.getElementById('lista-logs').innerHTML = logs.map(([id, l]) => {
                     const btnDel = (this.user.login === 'login americas') ? `<button class="btn-edit" style="margin-left:10px; color:var(--vermelho)" onclick="app.excluirLog('${id}')">🗑️</button>` : '';
                     return `<div class="log-row"><span><b>[${l.data}]</b> ${l.user}: ${l.acao} - ${l.desc}</span>${btnDel}</div>`;
