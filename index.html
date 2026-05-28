@@ -600,7 +600,7 @@
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.5
+            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.4
         </footer>
     </div>
 
@@ -1207,19 +1207,42 @@
             fecharModalExport() { document.getElementById('modal-export').classList.add('hidden'); },
 
             abrirModalExportEstoque() { document.getElementById('modal-export-estoque').classList.remove('hidden'); },
-            fecharModalExportEstoque() { document.getElementById('modal-export-estoque').classList.add('hidden'); },
+            fecharModalExportEstoque() { 
+                const modal = document.getElementById('modal-export-estoque');
+                modal.classList.add('hidden');
+                this.vencimentoExportTipo = null;
+                modal.querySelector('h3').innerText = 'Exportar Estoque';
+                
+                const ps = modal.querySelectorAll('p');
+                const labels = modal.querySelectorAll('.export-option');
+                if(ps[0]) ps[0].style.visibility = 'visible';
+                if(labels[0]) labels[0].style.display = 'block';
+                if(labels[1]) labels[1].style.display = 'block';
+            },
 
             processarExportacaoEstoque() {
-                const tipo = document.querySelector('input[name="exp-estoque-tipo"]:checked').value;
                 const formato = document.querySelector('input[name="exp-estoque-formato"]:checked').value;
                 let listaRaw = [];
 
-                if(tipo === 'filtrado') {
-                    const col = document.getElementById('filtro-coluna').value;
-                    const busca = document.getElementById('busca').value.toLowerCase();
-                    listaRaw = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
+                if(this.vencimentoExportTipo) {
+                    const hoje = new Date();
+                    const limite = new Date(); limite.setDate(hoje.getDate() + 45);
+                    listaRaw = Object.values(this.dados.materiais).filter(m => {
+                        if(!m.venc) return false;
+                        const dv = new Date(m.venc + "T00:00:00");
+                        if(this.vencimentoExportTipo === 'vencidos') return dv < hoje;
+                        if(this.vencimentoExportTipo === 'vencendo') return dv >= hoje && dv <= limite;
+                        return false;
+                    });
                 } else {
-                    listaRaw = Object.values(this.dados.materiais);
+                    const tipo = document.querySelector('input[name="exp-estoque-tipo"]:checked').value;
+                    if(tipo === 'filtrado') {
+                        const col = document.getElementById('filtro-coluna').value;
+                        const busca = document.getElementById('busca').value.toLowerCase();
+                        listaRaw = Object.values(this.dados.materiais).filter(m => (m[col] || "").toLowerCase().includes(busca));
+                    } else {
+                        listaRaw = Object.values(this.dados.materiais);
+                    }
                 }
 
                 if(listaRaw.length === 0) return alert("Nenhum item para exportar.");
@@ -1484,34 +1507,17 @@
             },
 
             exportarVencimento(tipo) {
-                const hoje = new Date();
-                const limite = new Date(); limite.setDate(hoje.getDate() + 45);
-                const lista = [];
-
-                Object.values(this.dados.materiais).forEach(m => {
-                    if(!m.venc) return;
-                    const dv = new Date(m.venc + "T00:00:00");
-                    if(tipo === 'vencidos' && dv < hoje) {
-                        lista.push(m);
-                    } else if(tipo === 'vencendo' && dv >= hoje && dv <= limite) {
-                        lista.push(m);
-                    }
-                });
-
-                if(lista.length === 0) return alert("Nenhum item para exportar.");
-
-                const dadosExcel = lista.map(m => ({
-                    'Código': m.cod,
-                    'Nome do Kit': m.nome,
-                    'Protocolo': m.prot || '-',
-                    'Local': m.local || '-',
-                    'Vencimento': m.venc.split('-').reverse().join('/')
-                }));
-
-                const ws = XLSX.utils.json_to_sheet(dadosExcel);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, tipo === 'vencidos' ? "Kits Vencidos" : "Kits a Vencer");
-                XLSX.writeFile(wb, `Relatorio_${tipo}_${this.unidade}_${new Date().toLocaleDateString()}.xlsx`);
+                this.vencimentoExportTipo = tipo;
+                document.getElementById('modal-export-estoque').classList.remove('hidden');
+                const modal = document.getElementById('modal-export-estoque');
+                modal.querySelector('h3').innerText = tipo === 'vencidos' ? 'Exportar Kits Vencidos' : 'Exportar Kits a Vencer';
+                
+                // Ocultar seção de abrangência usando classes para evitar erros de índice
+                const ps = modal.querySelectorAll('p');
+                const labels = modal.querySelectorAll('.export-option');
+                if(ps[0]) ps[0].style.visibility = 'hidden';
+                if(labels[0]) labels[0].style.display = 'none';
+                if(labels[1]) labels[1].style.display = 'none';
             },
 
             exportarExcel() {
