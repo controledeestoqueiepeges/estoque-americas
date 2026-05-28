@@ -538,6 +538,14 @@
                             <input type="password" id="adm-pass" placeholder="Mín. 4 dígitos" style="margin-bottom: 5px;">
                         </div>
                         <div>
+                            <label style="font-size: 12px;">Perfil</label>
+                            <select id="adm-role" style="margin-bottom: 5px;">
+                                <option value="user">Usuário Comum</option>
+                                <option value="viewer">Visualizador (Apenas Dash)</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div>
                             <label style="font-size: 12px;">Unidade</label>
                             <select id="adm-unidade" style="margin-bottom: 5px;">
                                 <option value="RJ">RJ</option>
@@ -592,7 +600,7 @@
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.4
+            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.5
         </footer>
     </div>
 
@@ -714,9 +722,23 @@
                 document.getElementById('section-auth').classList.add('hidden');
                 document.getElementById('layout-sistema').style.display = 'block';
                 document.getElementById('user-info').innerText = this.user.nome;
-                if(this.user.role === 'admin') {
-                    document.getElementById('nav-adm').classList.remove('hidden');
-                    document.getElementById('nav-rel').classList.remove('hidden');
+                
+                // Controle de Acesso por Perfil
+                if(this.user.role === 'viewer') {
+                    // Ocultar todos os botões do menu lateral exceto Dashboard
+                    document.querySelectorAll('.nav-btn').forEach(btn => {
+                        if(btn.id !== 'nav-dash') btn.classList.add('hidden');
+                    });
+                } else {
+                    // Mostrar botões padrão para outros usuários
+                    document.querySelectorAll('.nav-btn').forEach(btn => {
+                        if(!['nav-rel', 'nav-adm'].includes(btn.id)) btn.classList.remove('hidden');
+                    });
+                    
+                    if(this.user.role === 'admin') {
+                        document.getElementById('nav-adm').classList.remove('hidden');
+                        document.getElementById('nav-rel').classList.remove('hidden');
+                    }
                 }
 
                 this.nav('dash');
@@ -1341,14 +1363,14 @@
                             <span class="badge-mov ${u.ativo ? 'bg-entrada' : 'bg-saida'}">${u.ativo ? 'Ativo' : 'Pendente'}</span>
                         </div>
                         <div class="user-info-row">
-                            <small>Unidade: <b>${u.unidade || 'Não informada'}</b> | Cargo: <b>${u.role === 'admin' ? 'Administrador' : 'Usuário'}</b></small>
+                            <small>Unidade: <b>${u.unidade || 'Não informada'}</b> | Cargo: <b>${u.role === 'admin' ? 'Administrador' : (u.role === 'viewer' ? 'Visualizador' : 'Usuário')}</b></small>
                         </div>
                         <div class="user-actions">
                             <button class="btn-adm-action ${u.ativo ? 'btn-adm-block' : 'btn-adm-approve'}" onclick="app.toggleUser('${id}', ${!u.ativo})">
                                 ${u.ativo ? 'Bloquear' : 'Aprovar'}
                             </button>
-                            <button class="btn-adm-action" onclick="app.toggleRole('${id}', '${u.role === 'admin' ? 'user' : 'admin'}')">
-                                Tornar ${u.role === 'admin' ? 'Usuário' : 'Admin'}
+                            <button class="btn-adm-action" onclick="app.toggleRole('${id}', '${u.role === 'admin' ? 'viewer' : (u.role === 'viewer' ? 'user' : 'admin')}')">
+                                Alterar Nível (U/V/A)
                             </button>
                             <button class="btn-adm-action" onclick="app.resetPass('${id}')">Trocar Senha</button>
                             <button class="btn-adm-action btn-adm-block" onclick="app.excluirUsuario('${id}')">🗑️ Excluir</button>
@@ -1362,6 +1384,7 @@
                 const l = document.getElementById('adm-login').value.trim();
                 const p = document.getElementById('adm-pass').value.trim();
                 const u = document.getElementById('adm-unidade').value;
+                const r = document.getElementById('adm-role').value;
 
                 if(!n || !l || !p) return alert("Preencha todos os campos!");
                 if(p.length < 4) return alert("A senha deve ter pelo menos 4 caracteres.");
@@ -1370,7 +1393,7 @@
                     nome: n,
                     login: l.toLowerCase(),
                     pass: p,
-                    role: 'user',
+                    role: r,
                     ativo: true,
                     unidade: u,
                     data_solicitacao: new Date().toLocaleString('pt-BR')
