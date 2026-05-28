@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -522,6 +522,32 @@
             </div>
 
             <div id="v-adm" class="view hidden">
+                <div class="card" id="card-novo-user" style="margin-bottom: 20px;">
+                    <h3>Novo Colaborador</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                        <div>
+                            <label style="font-size: 12px;">Nome</label>
+                            <input type="text" id="adm-nome" placeholder="Nome completo" style="margin-bottom: 5px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px;">Login</label>
+                            <input type="text" id="adm-login" placeholder="Ex: joao123" style="margin-bottom: 5px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px;">Senha</label>
+                            <input type="password" id="adm-pass" placeholder="Mín. 4 dígitos" style="margin-bottom: 5px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px;">Unidade</label>
+                            <select id="adm-unidade" style="margin-bottom: 5px;">
+                                <option value="RJ">RJ</option>
+                                <option value="SP">SP</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-premium" style="margin-top: 10px;" onclick="app.cadastrarManual()">CADASTRAR AGORA</button>
+                </div>
+
                 <div class="card">
                     <h3>Gerenciamento de Colaboradores</h3>
                     <div id="lista-users"></div>
@@ -585,8 +611,8 @@
                     messagingSenderId: "722436445499",
                     appId: "1:722436445499:web:e4c968164056477d44d31e"
                 },
-                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "INTAS PHARM 0439", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "M25-713", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
-                locais: ["Armário 1", "Armário 2", "Armário 3", "Armário 4", "Armário 5", "Armário 6", "Armário 7", "Banheiro Antigo", "Monitoria 1", "Monitoria 2", "Sala de Reunião 1", "Sala de Reunião 2"]
+                protocolos: ["20230246", "2011 (HARMONY)", "AMGEN20230153", "ARANOTE", "ASCENT 7", "ATLAS", "BLUESTAR", "CA057-001", "CÂMBRIA 2", "CAMELOT", "CELLTRION", "CLEE0011012001", "DREAMM 7", "DS302", "ELEGANT", "ESCALADE", "EVOPAR", "EVOPAR 2", "EXCALIBER", "EXCALIBER MANUTENÇÃO", "GLOBRYTE", "IMGN853-0421", "IRAKLIA", "JPCF", "JZLH", "KER-050-D301", "LINKER", "MAGNETISMM 32", "MAGNETISMM 5", "MAGNITUDE 01", "MAGNITUDE 02", "MAJESTEC 4", "MARIGOLD", "MK1084-004", "MK-2870-020", "MONUMENTAL 3", "MONUMENTAL 6", "MOUTAINEER 03", "OLYMPIA 01", "OLYMPIA 02", "OLYMPIA 03", "PRISM-MEL", "REJOICE", "RYL-2608-102", "SYMPHONY", "TROPIONLUNG15", "VANTAGE"],
+                locais: ["Armário 1", "Armário 2", "Armário 3", "Armário 4", "Armário 5", "Armário 6", "Armário 7", "Armário 8", "Banheiro Antigo", "Monitoria 1", "Monitoria 2", "Sala de Reunião 1", "Sala de Reunião 2"]
             },
             SP: {
                 title: "CONTROLE DE ESTOQUE INSTITUTO AMÉRICAS",
@@ -601,7 +627,7 @@
                     messagingSenderId: "384493014083",
                     appId: "1:384493014083:web:dc24b0d6b40333bdd798f6"
                 },
-                protocolos: ["CAMBRIA", "CA127-1030 -TRIDENT", "CA-224-127", "JZQB", "MK1022-016", "Mk1026-003", "MK1026-008", "MK1026-011", "MK2140-006", "Mk2140-010", "M25-713", "MK2870-004", "MK2870-020", "MK2870-022", "MK2870-023", "MK5684-004", "MK6482-011"],
+                protocolos: ["CAMBRIA", "CA127-1030 -TRIDENT", "CA-224-127", "JZQB", "MK1022-016", "Mk1026-003", "MK1026-008", "MK1026-011", "MK2140-006", "Mk2140-010", "MK2870-004", "MK2870-020", "MK2870-022", "MK2870-023", "MK5684-004", "MK6482-011"],
                 locais: ["ARMÁRIO 24", "ARMÁRIO 25", "ARMÁRIO 26", "ARMÁRIO 27", "ARMÁRIO 28", "ARMÁRIO 29", "ARMÁRIO 34", "ARMÁRIO 35"]
             }
         };
@@ -615,6 +641,16 @@
             paginaAtual: 1,
             itensPorPagina: 50,
             massaCount: 0,
+
+            async connectDB() {
+                const config = configs[this.unidade];
+                if (firebase.apps.length) {
+                    await firebase.app().delete();
+                }
+                firebase.initializeApp(config.firebase);
+                db = firebase.database();
+                await firebase.auth().signInAnonymously();
+            },
 
             updateTheme(unidade) {
                 this.unidade = unidade;
@@ -644,15 +680,8 @@
             async login() {
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
-                const config = configs[this.unidade];
-
-                if (firebase.apps.length) {
-                    await firebase.app().delete();
-                }
-                firebase.initializeApp(config.firebase);
-                db = firebase.database();
                 
-                await firebase.auth().signInAnonymously();
+                await this.connectDB();
 
                 if(u === 'login americas' && p === 'itc@123@') {
                     this.user = { nome: 'MASTER', login: u, role: 'admin', ativo: true };
@@ -664,10 +693,16 @@
                     const snapshot = await db.ref('usuarios').once('value');
                     const usuariosNoBanco = snapshot.val() || {};
                     this.user = Object.values(usuariosNoBanco).find(x => x.login === u && x.pass === p);
-                    if(this.user && this.user.ativo !== false) {
-                        this.prosseguirLogin();
+                    if(this.user) {
+                        if(this.user.ativo === false) {
+                            alert("Seu acesso ainda está pendente de aprovação.");
+                        } else if(this.user.unidade && this.user.unidade !== this.unidade) {
+                            alert(`Este usuário pertence à unidade ${this.user.unidade}. Selecione a unidade correta.`);
+                        } else {
+                            this.prosseguirLogin();
+                        }
                     } else { 
-                        alert("Acesso negado para esta unidade.");
+                        alert("Usuário ou senha incorretos.");
                     }
                 } catch (error) {
                     alert("Erro ao conectar ao banco de dados.");
@@ -1306,7 +1341,7 @@
                             <span class="badge-mov ${u.ativo ? 'bg-entrada' : 'bg-saida'}">${u.ativo ? 'Ativo' : 'Pendente'}</span>
                         </div>
                         <div class="user-info-row">
-                            <small>Cargo: <b>${u.role === 'admin' ? 'Administrador' : 'Usuário'}</b></small>
+                            <small>Unidade: <b>${u.unidade || 'Não informada'}</b> | Cargo: <b>${u.role === 'admin' ? 'Administrador' : 'Usuário'}</b></small>
                         </div>
                         <div class="user-actions">
                             <button class="btn-adm-action ${u.ativo ? 'btn-adm-block' : 'btn-adm-approve'}" onclick="app.toggleUser('${id}', ${!u.ativo})">
@@ -1316,9 +1351,43 @@
                                 Tornar ${u.role === 'admin' ? 'Usuário' : 'Admin'}
                             </button>
                             <button class="btn-adm-action" onclick="app.resetPass('${id}')">Trocar Senha</button>
+                            <button class="btn-adm-action btn-adm-block" onclick="app.excluirUsuario('${id}')">🗑️ Excluir</button>
                         </div>
                     </div>
                 `).join('');
+            },
+
+            cadastrarManual() {
+                const n = document.getElementById('adm-nome').value.trim();
+                const l = document.getElementById('adm-login').value.trim();
+                const p = document.getElementById('adm-pass').value.trim();
+                const u = document.getElementById('adm-unidade').value;
+
+                if(!n || !l || !p) return alert("Preencha todos os campos!");
+                if(p.length < 4) return alert("A senha deve ter pelo menos 4 caracteres.");
+
+                db.ref('usuarios').push({
+                    nome: n,
+                    login: l.toLowerCase(),
+                    pass: p,
+                    role: 'user',
+                    ativo: true,
+                    unidade: u,
+                    data_solicitacao: new Date().toLocaleString('pt-BR')
+                }).then(() => {
+                    alert("Colaborador cadastrado e ativado com sucesso!");
+                    document.getElementById('adm-nome').value = '';
+                    document.getElementById('adm-login').value = '';
+                    document.getElementById('adm-pass').value = '';
+                });
+            },
+
+            excluirUsuario(id) {
+                if(confirm("Deseja remover este colaborador permanentemente?")) {
+                    db.ref('usuarios/' + id).remove().then(() => {
+                        alert("Colaborador removido.");
+                    });
+                }
             },
 
             excluirLog(id) {
@@ -1336,14 +1405,35 @@
                 if(nova && nova.length >= 4) db.ref('usuarios/' + id).update({ pass: nova }).then(() => alert("Senha alterada!"));
             },
 
-            cadastrar() {
+            async cadastrar() {
                 const n = document.getElementById('cad-nome').value.trim();
                 const p = document.getElementById('cad-pass').value.trim();
-                if(n.length < 3 || p.length < 4) return alert("Dados insuficientes.");
-                const login = n.split(' ')[0].toLowerCase() + Math.floor(Math.random()*100);
-                db.ref('usuarios').push({ nome: n, login: login, pass: p, role: 'user', ativo: false });
-                alert(`Solicitação enviada para a unidade ${this.unidade}! Login: ${login}`);
-                this.toggleAuth();
+                
+                if(!n || !p) return alert("Preencha todos os campos!");
+                if(n.length < 3) return alert("O nome deve ter pelo menos 3 caracteres.");
+                if(p.length < 4) return alert("A senha deve ter pelo menos 4 caracteres.");
+                
+                await this.connectDB();
+                
+                const login = n.split(' ')[0].toLowerCase() + Math.floor(Math.random()*900 + 100);
+                
+                // Garantir que a solicitação seja enviada para a unidade correta
+                db.ref('usuarios').push({ 
+                    nome: n, 
+                    login: login, 
+                    pass: p, 
+                    role: 'user', 
+                    ativo: false,
+                    unidade: this.unidade,
+                    data_solicitacao: new Date().toLocaleString('pt-BR')
+                }).then(() => {
+                    alert(`Solicitação enviada com sucesso!\n\nSeu LOGIN de acesso será: ${login}\n\nAguarde a ativação pelo administrador.`);
+                    document.getElementById('cad-nome').value = '';
+                    document.getElementById('cad-pass').value = '';
+                    this.toggleAuth();
+                }).catch(err => {
+                    alert("Erro ao enviar solicitação: " + err.message);
+                });
             },
 
             toggleAuth() {
