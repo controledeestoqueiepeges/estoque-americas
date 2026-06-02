@@ -285,6 +285,9 @@
                                 <span id="count-vencidos" style="background:var(--vermelho); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
                             </div>
                         </div>
+                        <select id="filtro-vencidos" onchange="app.checkVencimento()" style="font-size:11px; padding:4px; margin-bottom:8px; height:auto;">
+                            <option value="">Filtrar Protocolo (Todos)</option>
+                        </select>
                         <div id="lista-quarentena" class="scroll-vencimento"></div>
                     </div>
                     <div class="card" style="border-left: 5px solid var(--alerta-laranja)">
@@ -295,6 +298,9 @@
                                 <span id="count-vencendo" style="background:var(--alerta-laranja); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
                             </div>
                         </div>
+                        <select id="filtro-vencendo" onchange="app.checkVencimento()" style="font-size:11px; padding:4px; margin-bottom:8px; height:auto;">
+                            <option value="">Filtrar Protocolo (Todos)</option>
+                        </select>
                         <div id="lista-vencendo" class="scroll-vencimento"></div>
                     </div>
                 </div>
@@ -600,7 +606,7 @@
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.4
+            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.5
         </footer>
     </div>
 
@@ -725,9 +731,10 @@
                 
                 // Controle de Acesso por Perfil
                 if(this.user.role === 'viewer') {
-                    // Ocultar todos os botões do menu lateral exceto Dashboard
+                    // Ocultar botões exceto Dashboard e Solicitação
                     document.querySelectorAll('.nav-btn').forEach(btn => {
-                        if(btn.id !== 'nav-dash') btn.classList.add('hidden');
+                        if(btn.id !== 'nav-dash' && btn.id !== 'nav-sol') btn.classList.add('hidden');
+                        else btn.classList.remove('hidden');
                     });
                 } else {
                     // Mostrar botões padrão para outros usuários
@@ -866,6 +873,19 @@
                         <div class="count">${c}</div>
                     </div>
                 `).join('');
+
+                // Atualizar também os filtros de vencimento no Dashboard
+                const selectVencidos = document.getElementById('filtro-vencidos');
+                const selectVencendo = document.getElementById('filtro-vencendo');
+                if(selectVencidos && selectVencendo) {
+                    const valVencidos = selectVencidos.value;
+                    const valVencendo = selectVencendo.value;
+                    const options = ordenados.map(([p, c]) => `<option value="${p}">${p}</option>`).join('');
+                    selectVencidos.innerHTML = '<option value="">Filtrar Protocolo (Todos)</option>' + options;
+                    selectVencendo.innerHTML = '<option value="">Filtrar Protocolo (Todos)</option>' + options;
+                    selectVencidos.value = valVencidos;
+                    selectVencendo.value = valVencendo;
+                }
             },
 
             filtrarPorProtocolo(protocolo) {
@@ -886,6 +906,9 @@
                 const hoje = new Date();
                 const limite = new Date(); limite.setDate(hoje.getDate() + 45);
                 const vencidos = [], vencendo = [];
+                
+                const fVencidos = document.getElementById('filtro-vencidos').value;
+                const fVencendo = document.getElementById('filtro-vencendo').value;
 
                 Object.values(this.dados.materiais).forEach(m => {
                     if(!m.venc) return;
@@ -894,11 +917,15 @@
                         <b>[${m.cod}] ${m.nome}</b><br>
                         <small>Prot: ${m.prot || '-'} | Local: ${m.local || '-'} | Venc: ${m.venc.split('-').reverse().join('/')}</small>
                     </div>`;
-                    if(dv < hoje) vencidos.push(info);
-                    else if(dv <= limite) vencendo.push(info);
+                    
+                    if(dv < hoje) {
+                        if(!fVencidos || (m.prot || 'Sem Protocolo') === fVencidos) vencidos.push(info);
+                    } else if(dv <= limite) {
+                        if(!fVencendo || (m.prot || 'Sem Protocolo') === fVencendo) vencendo.push(info);
+                    }
                 });
-                document.getElementById('lista-quarentena').innerHTML = vencidos.join('') || '<p style="font-size:12px; color:#999">Nenhum item vencido.</p>';
-                document.getElementById('lista-vencendo').innerHTML = vencendo.join('') || '<p style="font-size:12px; color:#999">Nenhum item vencendo em 45 dias.</p>';
+                document.getElementById('lista-quarentena').innerHTML = vencidos.join('') || '<p style="font-size:12px; color:#999">Nenhum item encontrado.</p>';
+                document.getElementById('lista-vencendo').innerHTML = vencendo.join('') || '<p style="font-size:12px; color:#999">Nenhum item encontrado.</p>';
                 
                 // Atualizar contadores visuais
                 const countVencidosEl = document.getElementById('count-vencidos');
@@ -1227,8 +1254,11 @@
                 if(this.vencimentoExportTipo) {
                     const hoje = new Date();
                     const limite = new Date(); limite.setDate(hoje.getDate() + 45);
+                    const fProt = document.getElementById(this.vencimentoExportTipo === 'vencidos' ? 'filtro-vencidos' : 'filtro-vencendo').value;
+                    
                     listaRaw = Object.values(this.dados.materiais).filter(m => {
                         if(!m.venc) return false;
+                        if(fProt && (m.prot || 'Sem Protocolo') !== fProt) return false;
                         const dv = new Date(m.venc + "T00:00:00");
                         if(this.vencimentoExportTipo === 'vencidos') return dv < hoje;
                         if(this.vencimentoExportTipo === 'vencendo') return dv >= hoje && dv <= limite;
