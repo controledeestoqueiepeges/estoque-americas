@@ -15,6 +15,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --premium-bg: #f5f5f7;
@@ -23,6 +26,7 @@
             --premium-text: #1d1d1f;
             --premium-gray: #86868b;
             --roxo: #5a189a;
+            --roxo-escuro: #430f75;
             --lilas: #9d4edd;
             --escuro: #1a132e;
             --cinza-fundo: #f4f5f8;
@@ -33,115 +37,308 @@
             --alerta-laranja: #f39c12;
             --azul-principal: #5a189a;
             --branco: #FFFFFF;
+
+            /* --- Tokens do redesign --- */
+            --border: #e6e6ec;
+            --border-soft: #edeef3;
+            --ink-soft: #6b7280;
+            --sidebar-bg: #1a132e;
+            --sidebar-bg-2: #241a44;
+            --sidebar-text: #cbb2ff;
+            --sidebar-text-dim: #9d8ac4;
+            --r-sm: 10px;
+            --r-md: 14px;
+            --r-lg: 18px;
+            --r-xl: 22px;
+            --shadow-xs: 0 1px 2px rgba(16,24,40,.05);
+            --shadow-sm: 0 2px 8px rgba(16,24,40,.06);
+            --shadow-md: 0 8px 24px rgba(16,24,40,.08);
+            --shadow-lg: 0 16px 40px rgba(16,24,40,.12);
+            --ease: cubic-bezier(.4,0,.2,1);
         }
 
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--cinza-fundo); color: var(--texto); overflow-x: hidden; }
+        html { -webkit-font-smoothing: antialiased; }
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--cinza-fundo);
+            color: var(--texto);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h1,h2,h3,h4,h5 { font-family: 'Inter', 'Segoe UI', sans-serif; letter-spacing: -.01em; color: var(--escuro); }
+
+        /* --- Custom scrollbar (global) --- */
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d2e0; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+        ::-webkit-scrollbar-thumb:hover { background: #b9b2cc; background-clip: padding-box; }
+        * { scrollbar-width: thin; scrollbar-color: #d6d2e0 transparent; }
+
+        /* Ícones inline (SVG) */
+        .icon { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -4px; }
+        .icon-sm { width: 15px; height: 15px; vertical-align: -3px; }
+        .icon-lg { width: 26px; height: 26px; }
+        .icon-btn-inline { display: inline-flex; align-items: center; justify-content: center; }
 
         /* --- LOGIN --- */
-        .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--cinza-fundo); transition: background 0.5s; }
-        .auth-card { background: var(--premium-card); width: 100%; max-width: 400px; padding: 40px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); text-align: center; }
-        .auth-card img { width: 220px; margin-bottom: 25px; border-radius: 8px; }
-        .auth-card h3 { font-size: 24px; font-weight: 600; color: var(--premium-text); margin-bottom: 25px; }
-        .auth-card label { display: block; text-align: left; font-size: 11px; font-weight: 700; color: var(--premium-gray); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px; }
-        .auth-card input, .auth-card select { width: 100%; padding: 14px; background: #f9f9fb; border: 1px solid #e5e5e7; border-radius: 12px; margin-bottom: 18px; font-size: 16px; outline: none; transition: 0.2s; color: var(--premium-text); }
-        .btn-premium { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--premium-accent); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .btn-premium:hover { transform: translateY(-2px); opacity: 0.9; }
+        .auth-screen {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(157,78,221,.20), transparent 45%),
+                radial-gradient(circle at 85% 90%, rgba(90,24,154,.25), transparent 45%),
+                var(--escuro);
+            transition: background 0.5s;
+        }
+        .auth-card { background: var(--premium-card); width: 100%; max-width: 400px; padding: 44px 38px; border-radius: var(--r-xl); box-shadow: var(--shadow-lg); text-align: center; animation: fadeUp .5s var(--ease); }
+        .auth-card img { width: 190px; margin-bottom: 22px; border-radius: 8px; }
+        .auth-card h3 { font-size: 22px; font-weight: 700; color: var(--premium-text); margin-bottom: 24px; }
+        .auth-card label { display: block; text-align: left; font-size: 11px; font-weight: 700; color: var(--premium-gray); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; margin-left: 2px; }
+        .auth-card input, .auth-card select {
+            width: 100%; padding: 13px 14px; background: #f9f9fb; border: 1.5px solid #e5e5e7; border-radius: var(--r-md);
+            margin-bottom: 18px; font-size: 15px; outline: none; transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+            color: var(--premium-text); font-family: inherit;
+        }
+        .auth-card input:focus, .auth-card select:focus { border-color: var(--premium-accent); background: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--premium-accent) 14%, transparent); }
+        .btn-premium {
+            width: 100%; padding: 15px; border-radius: var(--r-md); border: none; background: linear-gradient(135deg, var(--premium-accent), var(--roxo-escuro));
+            color: white; font-size: 15px; font-weight: 700; letter-spacing: .02em; cursor: pointer; transition: transform .18s var(--ease), box-shadow .18s var(--ease), opacity .18s var(--ease);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-premium:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); opacity: .97; }
+        .btn-premium:active { transform: translateY(0); }
 
         /* --- SISTEMA --- */
         #layout-sistema { display: none; min-height: 100vh; padding-bottom: 60px; }
-        header { background: var(--escuro); color: white; height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: fixed; top: 0; width: 100%; z-index: 1000; }
-        header img { height: 40px; border-radius: 4px; }
-        .sidebar { position: fixed; top: 65px; left: 0; bottom: 0; width: 240px; background: #22163f; padding: 20px; overflow-y: auto; }
-        .nav-btn { background: transparent; border: none; color: #cbb2ff; padding: 12px; text-align: left; border-radius: 8px; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .nav-btn.active { background: var(--roxo); color: white; }
-        main { margin-left: 240px; margin-top: 65px; padding: 20px; }
-        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th { background: #f8f9fa; padding: 6px 4px; font-size: 11px; color: var(--escuro); text-transform: uppercase; border: 1px solid #dee2e6; }
-        td { padding: 4px 6px; border: 1px solid #dee2e6; font-size: 12px; text-align: center; line-height: 1.2; }
-        
-        .btn-edit { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--azul-principal); padding: 2px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--cinza-borda); border-radius: 8px; margin-bottom: 10px; font-size: 16px; background: white; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-        
-        .btn-principal { background: var(--roxo); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn-principal:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6; }
-        
-        .protocol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 15px; }
-        .protocol-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 4px; text-align: center; transition: 0.3s; cursor: pointer; min-height: 65px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-        .protocol-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: var(--roxo); background: #f0f0ff; }
-        .protocol-card:active { transform: scale(0.96); }
-        .protocol-card h4 { margin: 0; font-size: 10px; color: var(--escuro); line-height: 1.1; font-weight: 700; text-transform: uppercase; word-wrap: break-word; }
-        .protocol-card .count { font-size: 18px; font-weight: 800; color: var(--roxo); margin-top: 2px; }
 
-        .alert-item { padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 12px; border-left: 5px solid; line-height: 1.4; text-align: left; cursor: pointer; transition: transform 0.2s; }
-        .alert-item:hover { transform: scale(1.02); opacity: 0.9; }
-        .bg-quarentena { background: #fee2e2; border-color: var(--vermelho); color: #991b1b; }
-        .bg-vencendo { background: #fef3c7; border-color: var(--alerta-laranja); color: #92400e; }
+        header {
+            background: linear-gradient(90deg, var(--escuro), #241a44);
+            color: white; height: 68px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 26px; position: fixed; top: 0; width: 100%; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,.06); box-shadow: 0 2px 16px rgba(0,0,0,.18);
+        }
+        header img { height: 36px; border-radius: 6px; background: rgba(255,255,255,.06); padding: 3px; }
+        #header-title { font-size: 16px !important; font-weight: 700 !important; letter-spacing: .01em !important; opacity: .95; }
+        .topbar-user { display: flex; align-items: center; gap: 14px; }
+        .topbar-user-pill { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.09); padding: 6px 14px 6px 8px; border-radius: 999px; }
+        .topbar-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--lilas), var(--roxo)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+        #user-info { font-weight: 600 !important; font-size: 13px; color: #f1eaff; }
+        .btn-logout {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: #fff; padding: 8px 14px;
+            border-radius: var(--r-sm); cursor: pointer; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+            transition: background .18s var(--ease), transform .18s var(--ease);
+        }
+        .btn-logout:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+
+        .sidebar {
+            position: fixed; top: 68px; left: 0; bottom: 0; width: 250px;
+            background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-2));
+            padding: 18px 14px; overflow-y: auto; border-right: 1px solid rgba(255,255,255,.05);
+        }
+        .nav-btn {
+            background: transparent; border: none; color: var(--sidebar-text); padding: 11px 14px;
+            text-align: left; border-radius: var(--r-sm); cursor: pointer; width: 100%; display: flex; align-items: center;
+            gap: 12px; margin-bottom: 4px; font-size: 13.5px; font-weight: 500; font-family: inherit;
+            transition: background .16s var(--ease), color .16s var(--ease), transform .16s var(--ease);
+        }
+        .nav-btn .icon { color: var(--sidebar-text-dim); transition: color .16s var(--ease); }
+        .nav-btn:hover:not(.active) { background: rgba(255,255,255,.06); color: #fff; transform: translateX(2px); }
+        .nav-btn:hover:not(.active) .icon { color: #fff; }
+        .nav-btn.active { background: linear-gradient(135deg, var(--roxo), var(--lilas)); color: white; box-shadow: 0 4px 14px rgba(90,24,154,.45); }
+        .nav-btn.active .icon { color: #fff; }
+
+        main { margin-left: 250px; margin-top: 68px; padding: 26px 28px; max-width: 1400px; }
+
+        .card {
+            background: white; border: 1px solid var(--border-soft); border-radius: var(--r-lg); padding: 26px;
+            box-shadow: var(--shadow-sm); margin-bottom: 22px; animation: fadeUp .35s var(--ease);
+        }
+        .card > h3, .card > h4 { margin-top: 0; }
+        .card h3 { font-size: 16.5px; font-weight: 700; }
+
+        /* --- KPI cards --- */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; margin-bottom: 22px; }
+        .kpi-card {
+            background: white; border: 1px solid var(--border-soft); border-radius: var(--r-lg); padding: 20px 22px;
+            box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 16px; transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+        }
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .kpi-icon { width: 46px; height: 46px; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .kpi-icon .icon { width: 22px; height: 22px; }
+        .kpi-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .kpi-value { font-size: 24px; font-weight: 800; color: var(--escuro); line-height: 1.1; }
+        .kpi-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
+        .kpi-icon.k-roxo { background: color-mix(in srgb, var(--roxo) 14%, transparent); color: var(--roxo); }
+        .kpi-icon.k-vermelho { background: color-mix(in srgb, var(--vermelho) 14%, transparent); color: var(--vermelho); }
+        .kpi-icon.k-laranja { background: color-mix(in srgb, var(--alerta-laranja) 16%, transparent); color: var(--alerta-laranja); }
+        .kpi-icon.k-verde { background: color-mix(in srgb, var(--verde) 14%, transparent); color: var(--verde); }
+        .kpi-icon.k-azul { background: color-mix(in srgb, #3498db 15%, transparent); color: #3498db; }
+
+        .section-title { display: flex; align-items: center; gap: 10px; }
+        .section-title .icon { color: var(--roxo); }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; background: white; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border-soft); }
+        th { background: #faf9fc; padding: 12px 10px; font-size: 10.5px; font-weight: 700; color: var(--escuro); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); border-right: none; }
+        td { padding: 11px 10px; border-bottom: 1px solid var(--border-soft); font-size: 12.5px; text-align: center; line-height: 1.3; color: var(--texto); }
+        tbody tr { transition: background .12s var(--ease); }
+        tbody tr:hover { background: #faf7ff; }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .btn-edit { background: none; border: none; cursor: pointer; font-size: 15px; color: var(--azul-principal); padding: 6px; border-radius: 8px; transition: background .15s var(--ease), transform .15s var(--ease); display: inline-flex; align-items: center; justify-content: center; }
+        .btn-edit:hover { background: #f1eaff; transform: scale(1.08); }
+
+        input, select, textarea {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--cinza-borda); border-radius: var(--r-sm);
+            margin-bottom: 12px; font-size: 14.5px; background: white; font-family: inherit; color: var(--texto);
+            transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--roxo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--roxo) 12%, transparent); }
+        input:disabled, select:disabled { opacity: .6; cursor: not-allowed; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 12.5px; color: #4b5065; text-transform: uppercase; letter-spacing: .02em; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 18px; }
+
+        .btn-principal {
+            background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: white; border: none; padding: 14px;
+            border-radius: var(--r-sm); cursor: pointer; width: 100%; font-weight: 700; font-size: 14.5px; letter-spacing: .01em;
+            transition: transform .16s var(--ease), box-shadow .16s var(--ease), opacity .16s var(--ease); box-shadow: var(--shadow-xs);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-principal:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-principal:active:not(:disabled) { transform: translateY(0); }
+        .btn-principal:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6; box-shadow: none; }
+
+        .btn-excel {
+            background: linear-gradient(135deg, var(--verde), #1f7a70); color: white; border: none; padding: 10px 18px;
+            border-radius: var(--r-sm); cursor: pointer; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 8px;
+            transition: transform .16s var(--ease), box-shadow .16s var(--ease); box-shadow: var(--shadow-xs);
+        }
+        .btn-excel:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+        .protocol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 15px; }
+        .protocol-card { background: #faf9fc; border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 10px 6px; text-align: center; transition: all .2s var(--ease); cursor: pointer; min-height: 68px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .protocol-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--roxo); background: #f5f0ff; }
+        .protocol-card:active { transform: scale(0.96); }
+        .protocol-card h4 { margin: 0; font-size: 10px; color: var(--escuro); line-height: 1.15; font-weight: 700; text-transform: uppercase; word-wrap: break-word; }
+        .protocol-card .count { font-size: 19px; font-weight: 800; color: var(--roxo); margin-top: 3px; }
+
+        .alert-item { padding: 12px; margin-bottom: 8px; border-radius: var(--r-sm); font-size: 12px; border-left: 4px solid; line-height: 1.4; text-align: left; cursor: pointer; transition: transform 0.18s var(--ease), box-shadow .18s var(--ease); }
+        .alert-item:hover { transform: translateX(3px); box-shadow: var(--shadow-xs); opacity: 0.95; }
+        .bg-quarentena { background: #fef1f1; border-color: var(--vermelho); color: #991b1b; }
+        .bg-vencendo { background: #fef8ec; border-color: var(--alerta-laranja); color: #92400e; }
 
         /* Scroll Interno para Listas de Vencimento */
         .scroll-vencimento { max-height: 250px; overflow-y: auto; padding-right: 5px; }
-        .scroll-vencimento::-webkit-scrollbar { width: 6px; }
-        .scroll-vencimento::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .scroll-vencimento::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-        .scroll-vencimento::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
         .hidden { display: none !important; }
-        .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: 12px; margin-bottom: 15px; border: 3px solid var(--roxo); overflow: hidden; }
-        
+        .scanner-view { width: 100%; height: 250px; background: #000; display: none; border-radius: var(--r-lg); margin-bottom: 15px; border: 3px solid var(--roxo); overflow: hidden; box-shadow: var(--shadow-md); }
+
         .massa-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
         .massa-row input { margin-bottom: 0; flex-grow: 1; }
-        .btn-scan-mini { background: var(--roxo); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
-        .btn-add-item { background: #636e72; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+        .btn-scan-mini { background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: white; border: none; padding: 10px; border-radius: var(--r-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; transition: transform .16s var(--ease); }
+        .btn-scan-mini:hover { transform: translateY(-2px); }
+        .btn-add-item { background: #4b5065; color: white; border: none; padding: 11px 20px; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 10px; display: flex; align-items: center; gap: 8px; transition: transform .16s var(--ease), background .16s var(--ease); }
+        .btn-add-item:hover { background: #3a3e50; transform: translateY(-2px); }
 
-        .log-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .badge-mov { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; color: white; }
+        .log-row { padding: 14px 8px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; font-size: 13px; gap: 10px; transition: background .12s var(--ease); }
+        .log-row:hover { background: #faf9fc; }
+        .log-row:last-child { border-bottom: none; }
+        .badge-mov { padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 10.5px; color: white; letter-spacing: .02em; display: inline-block; }
         .bg-entrada { background: var(--verde); }
         .bg-saida { background: var(--vermelho); }
         .bg-estorno { background: var(--alerta-laranja); }
         .bg-solicitacao { background: #3498db; }
 
+        /* Paginação */
+        .paginacao-controles { display: flex; align-items: center; gap: 12px; }
+        .btn-pag { background: white; border: 1.5px solid var(--border); color: var(--escuro); padding: 8px 16px; border-radius: var(--r-sm); cursor: pointer; font-weight: 600; font-size: 12.5px; transition: all .16s var(--ease); }
+        .btn-pag:hover:not(:disabled) { border-color: var(--roxo); color: var(--roxo); background: #faf7ff; }
+        .btn-pag:disabled { opacity: .4; cursor: not-allowed; }
+        .info-pag { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+
         /* Modal Exportação */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--escuro); }
-        .export-option { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; font-size: 14px; }
-        .export-option input { width: 18px; height: 18px; margin-bottom: 0; cursor: pointer; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,10,28,0.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 2000; animation: fadeIn .18s var(--ease); }
+        .modal-content { background: white; padding: 32px; border-radius: var(--r-xl); width: 90%; max-width: 420px; box-shadow: var(--shadow-lg); max-height: 88vh; overflow-y: auto; animation: fadeUp .25s var(--ease); }
+        .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--escuro); font-size: 18px; font-weight: 700; }
+        .export-option { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; font-size: 13.5px; padding: 9px 12px; border-radius: var(--r-sm); transition: background .15s var(--ease); text-transform: none; font-weight: 500; color: var(--texto); }
+        .export-option:hover { background: #faf7ff; }
+        .export-option input { width: 17px; height: 17px; margin-bottom: 0; cursor: pointer; accent-color: var(--roxo); }
         .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
-        .btn-modal { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-confirm { background: var(--roxo); color: white; }
-        .btn-cancel { background: #eee; color: #666; }
-        .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; }
+        .btn-modal { flex: 1; padding: 13px; border-radius: var(--r-sm); border: none; font-weight: 700; font-size: 13.5px; cursor: pointer; transition: transform .16s var(--ease), opacity .16s var(--ease); }
+        .btn-modal:hover { transform: translateY(-2px); }
+        .btn-confirm { background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: white; box-shadow: var(--shadow-xs); }
+        .btn-cancel { background: #f1f1f4; color: #555; }
+        .info-detalhada { font-size: 11px; color: #666; margin-top: 4px; display: block; line-height: 1.4; text-transform: none; font-weight: 400; }
 
         /* Estilos Admin */
-        .user-card { background: #f9f9fb; border: 1px solid #e5e5e7; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .user-info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .user-card { background: #faf9fc; border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 16px; margin-bottom: 14px; transition: box-shadow .16s var(--ease); }
+        .user-card:hover { box-shadow: var(--shadow-xs); }
+        .user-info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
         .user-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-adm-action { padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
-        .btn-adm-action:hover { background: #f0f0f0; }
+        .btn-adm-action { padding: 7px 14px; border-radius: var(--r-sm); border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 12px; font-weight: 600; transition: all .16s var(--ease); }
+        .btn-adm-action:hover { background: #f5f5f7; transform: translateY(-1px); }
         .btn-adm-approve { background: var(--verde); color: white; border: none; }
         .btn-adm-block { background: var(--vermelho); color: white; border: none; }
 
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--escuro); color: #cbb2ff; text-align: center; padding: 10px; font-size: 12px; z-index: 1001; }
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: linear-gradient(90deg, var(--escuro), #241a44); color: var(--sidebar-text-dim); text-align: center; padding: 10px; font-size: 11.5px; z-index: 1001; border-top: 1px solid rgba(255,255,255,.05); }
 
-        @media (max-width: 768px) { .sidebar { width: 60px; } .nav-btn span { display: none; } main { margin-left: 60px; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 1024px) {
+            main { padding: 20px; }
+            .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 64px; padding: 14px 8px; }
+            .sidebar .nav-btn span { display: none; }
+            .nav-btn { justify-content: center; padding: 12px 0; }
+            main { margin-left: 64px; padding: 16px; }
+            #header-title { font-size: 13px !important; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .card { padding: 18px; }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .topbar-user-pill span#user-info { display: none; }
+        }
+
+        /* --- Alternância manual Notebook / Celular (botão) --- */
+        .btn-view-toggle {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: #fff; padding: 8px 14px;
+            border-radius: var(--r-sm); cursor: pointer; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px;
+            transition: background .18s var(--ease), transform .18s var(--ease);
+        }
+        .btn-view-toggle:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+
+        body.modo-mobile .sidebar { width: 64px; padding: 14px 8px; }
+        body.modo-mobile .sidebar .nav-btn span { display: none; }
+        body.modo-mobile .nav-btn { justify-content: center; padding: 12px 0; }
+        body.modo-mobile main { margin-left: 64px; padding: 16px; }
+        body.modo-mobile #header-title { font-size: 13px !important; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        body.modo-mobile .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
+        body.modo-mobile .card { padding: 18px; }
+        body.modo-mobile .form-grid { grid-template-columns: 1fr !important; }
+        body.modo-mobile .topbar-user-pill span#user-info { display: none; }
+        body.modo-mobile .btn-view-toggle span { display: none; }
 
         /* Estilos de Impressão de Etiquetas */
         @media print {
             body * { visibility: hidden; }
             #area-impressao-etiquetas, #area-impressao-etiquetas * { visibility: visible; }
             #area-impressao-etiquetas { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
-            .etiqueta-print { 
-                width: 50mm; 
-                height: 40mm; 
-                border: 0.1mm solid #eee; 
-                padding: 2mm; 
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: center; 
+            .etiqueta-print {
+                width: 50mm;
+                height: 40mm;
+                border: 0.1mm solid #eee;
+                padding: 2mm;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
                 page-break-inside: avoid;
                 float: left;
                 overflow: hidden;
@@ -159,17 +356,19 @@
             max-height: 400px;
             overflow-y: auto;
             padding: 10px;
-            background: #f9f9f9;
-            border-radius: 12px;
+            background: #faf9fc;
+            border-radius: var(--r-md);
         }
         .etiqueta-preview {
             background: white;
-            border: 1px solid #ddd;
-            padding: 10px;
+            border: 1px solid var(--border-soft);
+            padding: 12px;
             text-align: center;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: var(--r-sm);
+            box-shadow: var(--shadow-xs);
+            transition: transform .16s var(--ease);
         }
+        .etiqueta-preview:hover { transform: translateY(-2px); }
         .etiqueta-preview svg { width: 100%; height: auto; }
     </style>
 </head>
@@ -212,37 +411,66 @@
                 <img id="header-logo" src="https://www.institutoamericas.org/wp-content/uploads/2025/09/logo-instituto-americas.svg" alt="Logo">
                 <h2 id="header-title" style="font-size: 18px; font-weight: 700; letter-spacing: 1px;">Sistema de Controle de Estoque Unificado Américas</h2>
             </div>
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <small id="user-info" style="font-weight:600"></small>
-                <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:4px 8px; border-radius:4px; cursor:pointer">Sair</button>
+            <div class="topbar-user">
+                <button class="btn-view-toggle" id="btn-toggle-view" onclick="appUI.toggleViewMode()" title="Alternar entre visualização Notebook e Celular">
+                    <svg class="icon icon-sm" id="icon-view-mode" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    <span id="view-mode-label">Notebook</span>
+                </button>
+                <div class="topbar-user-pill">
+                    <span class="topbar-user-avatar" id="user-avatar"></span>
+                    <small id="user-info" style="font-weight:600"></small>
+                </div>
+                <button class="btn-logout" onclick="location.reload()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sair
+                </button>
             </div>
         </header>
 
         <aside class="sidebar">
-            <button id="nav-dash" class="nav-btn active" onclick="app.nav('dash')">📊 <span>Dashboard</span></button>
-            <button id="nav-ent" class="nav-btn" onclick="app.nav('ent')">📥 <span>Entrada de Kit</span></button>
-            <button id="nav-sol" class="nav-btn" onclick="app.nav('sol')">📝 <span>Solicitação de Kit</span></button>
-            <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')">📤 <span>Saída de Kit</span></button>
-            <button id="nav-massa" class="nav-btn" onclick="app.nav('massa')">📦 <span>Baixa em Massa</span></button>
-            <button id="nav-est" class="nav-btn" onclick="app.nav('est')">🔄 <span>Estorno</span></button>
-            <button id="nav-etiq" class="nav-btn" onclick="app.nav('etiq')">🏷️ <span>Gerar Etiquetas</span></button>
-            <button id="nav-mov" class="nav-btn" onclick="app.nav('mov')">📑 <span>Movimentação</span></button>
-            <button id="nav-rel" class="nav-btn hidden" onclick="app.nav('rel')">📜 <span>Logs</span></button>
-            <button id="nav-adm" class="nav-btn hidden" onclick="app.nav('adm')">👥 <span>Colaboradores</span></button>
+            <button id="nav-dash" class="nav-btn active" onclick="app.nav('dash')"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg> <span>Dashboard</span></button>
+            <button id="nav-ent" class="nav-btn" onclick="app.nav('ent')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span>Entrada de Kit</span></button>
+            <button id="nav-sol" class="nav-btn" onclick="app.nav('sol')"><svg class="icon" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg> <span>Solicitação de Kit</span></button>
+            <button id="nav-sai" class="nav-btn" onclick="app.nav('sai')"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> <span>Saída de Kit</span></button>
+            <button id="nav-massa" class="nav-btn" onclick="app.nav('massa')"><svg class="icon" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> <span>Baixa em Massa</span></button>
+            <button id="nav-est" class="nav-btn" onclick="app.nav('est')"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg> <span>Estorno</span></button>
+            <button id="nav-etiq" class="nav-btn" onclick="app.nav('etiq')"><svg class="icon" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg> <span>Gerar Etiquetas</span></button>
+            <button id="nav-mov" class="nav-btn" onclick="app.nav('mov')"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M17 3h4v4"/><path d="M8 16v-4"/><path d="M12 16v-8"/><path d="M16 16v-2"/><path d="m14 9 7-7"/></svg> <span>Movimentação</span></button>
+            <button id="nav-rel" class="nav-btn hidden" onclick="app.nav('rel')"><svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg> <span>Logs</span></button>
+            <button id="nav-adm" class="nav-btn hidden" onclick="app.nav('adm')"><svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <span>Colaboradores</span></button>
         </aside>
 
         <main>
             <div id="v-dash" class="view">
+                <div class="kpi-grid" id="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon k-roxo"><svg class="icon" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
+                        <div class="kpi-body"><span class="kpi-value" id="kpi-total-kits">0</span><span class="kpi-label">Total de Kits</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon k-azul"><svg class="icon" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/></svg></div>
+                        <div class="kpi-body"><span class="kpi-value" id="kpi-protocolos">0</span><span class="kpi-label">Protocolos</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon k-vermelho"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+                        <div class="kpi-body"><span class="kpi-value" id="kpi-vencidos">0</span><span class="kpi-label">Itens Vencidos</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon k-laranja"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                        <div class="kpi-body"><span class="kpi-value" id="kpi-vencendo">0</span><span class="kpi-label">Itens Vencendo</span></div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <h3>Resumo por Protocolo</h3>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="2" width="4" height="19" rx="1"/></svg>Resumo por Protocolo</h3>
                     <div id="lista-protocolos" class="protocol-grid"></div>
                 </div>
 
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px">
                         <div style="display:flex; align-items:center; gap:10px">
-                            <h3>Estoque Atual</h3>
-                            <button onclick="app.abrirModalExportEstoque()" style="background:none; border:none; cursor:pointer; font-size:18px;" title="Exportar Estoque Atual">📊</button>
+                            <h3 style="margin:0">Estoque Atual</h3>
+                            <button class="btn-edit icon-btn-inline" onclick="app.abrirModalExportEstoque()" title="Exportar Estoque Atual"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
                         </div>
                         <div style="display:flex; gap:10px">
                             <select id="filtro-coluna" onchange="app.resetPaginacao()" style="width:120px; margin-bottom:0">
@@ -268,37 +496,37 @@
                         </thead>
                         <tbody id="lista-est"></tbody>
                     </table>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 12px;">
                         <div id="controles-paginacao" class="paginacao-controles" style="margin-top: 0;"></div>
-                        <div style="background: var(--roxo); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                        <div style="background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: white; padding: 9px 18px; border-radius: 999px; font-weight: 700; font-size: 13px; box-shadow: var(--shadow-xs);">
                             Total em Estoque: <span id="count-itens">0</span>
                         </div>
                     </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:20px">
-                    <div class="card" style="border-left: 5px solid var(--vermelho)">
+                    <div class="card" style="border-left: 4px solid var(--vermelho); margin-bottom:0">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                            <h4 style="margin:0; font-size:14px; color:var(--vermelho);">Itens Vencidos</h4>
+                            <h4 style="margin:0; font-size:13.5px; color:var(--vermelho); text-transform:uppercase; letter-spacing:.02em">Itens Vencidos</h4>
                             <div style="display:flex; align-items:center; gap:8px">
-                                <button onclick="app.exportarVencimento('vencidos')" style="background:none; border:none; cursor:pointer; font-size:16px;" title="Exportar Vencidos">📊</button>
-                                <span id="count-vencidos" style="background:var(--vermelho); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
+                                <button class="btn-edit icon-btn-inline" onclick="app.exportarVencimento('vencidos')" title="Exportar Vencidos"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                                <span id="count-vencidos" style="background:var(--vermelho); color:white; padding:2px 9px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
                             </div>
                         </div>
-                        <select id="filtro-vencidos" onchange="app.checkVencimento()" style="font-size:11px; padding:4px; margin-bottom:8px; height:auto;">
+                        <select id="filtro-vencidos" onchange="app.checkVencimento()" style="font-size:11px; padding:8px; margin-bottom:8px; height:auto;">
                             <option value="">Filtrar Protocolo (Todos)</option>
                         </select>
                         <div id="lista-quarentena" class="scroll-vencimento"></div>
                     </div>
-                    <div class="card" style="border-left: 5px solid var(--alerta-laranja)">
+                    <div class="card" style="border-left: 4px solid var(--alerta-laranja); margin-bottom:0">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                            <h4 style="margin:0; font-size:14px; color:var(--alerta-laranja);">Vencendo (45 dias)</h4>
+                            <h4 style="margin:0; font-size:13.5px; color:var(--alerta-laranja); text-transform:uppercase; letter-spacing:.02em">Vencendo (45 dias)</h4>
                             <div style="display:flex; align-items:center; gap:8px">
-                                <button onclick="app.exportarVencimento('vencendo')" style="background:none; border:none; cursor:pointer; font-size:16px;" title="Exportar Vencendo">📊</button>
-                                <span id="count-vencendo" style="background:var(--alerta-laranja); color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
+                                <button class="btn-edit icon-btn-inline" onclick="app.exportarVencimento('vencendo')" title="Exportar Vencendo"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+                                <span id="count-vencendo" style="background:var(--alerta-laranja); color:white; padding:2px 9px; border-radius:12px; font-size:12px; font-weight:bold">0</span>
                             </div>
                         </div>
-                        <select id="filtro-vencendo" onchange="app.checkVencimento()" style="font-size:11px; padding:4px; margin-bottom:8px; height:auto;">
+                        <select id="filtro-vencendo" onchange="app.checkVencimento()" style="font-size:11px; padding:8px; margin-bottom:8px; height:auto;">
                             <option value="">Filtrar Protocolo (Todos)</option>
                         </select>
                         <div id="lista-vencendo" class="scroll-vencimento"></div>
@@ -308,17 +536,20 @@
 
             <div id="v-sol" class="view hidden">
                 <div class="card">
-                    <h3>Nova Solicitação de Kit</h3>
-                    <label>Protocolo</label>
-                    <select id="sol-prot">
-                        <option value="">Selecione...</option>
-                    </select>
-                    <label>Data de Solicitação</label><input type="date" id="sol-data">
-                    <label>N° de Ordem</label><input type="text" id="sol-ordem" placeholder="Ex: 12345">
-                    <label>Laboratório</label><input type="text" id="sol-lab" placeholder="Ex: Laboratório X">
-                    <label>Data de Recebimento</label><input type="date" id="sol-recebimento">
-                    
-                    <button class="btn-principal" onclick="app.dbSalvarSolicitacao()">SALVAR SOLICITAÇÃO</button>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/></svg>Nova Solicitação de Kit</h3>
+                    <div class="form-grid">
+                        <div>
+                            <label>Protocolo</label>
+                            <select id="sol-prot">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div><label>Data de Solicitação</label><input type="date" id="sol-data"></div>
+                        <div><label>N° de Ordem</label><input type="text" id="sol-ordem" placeholder="Ex: 12345"></div>
+                        <div><label>Laboratório</label><input type="text" id="sol-lab" placeholder="Ex: Laboratório X"></div>
+                        <div><label>Data de Recebimento</label><input type="date" id="sol-recebimento"></div>
+                    </div>
+                    <button class="btn-principal" style="margin-top:6px" onclick="app.dbSalvarSolicitacao()">SALVAR SOLICITAÇÃO</button>
                 </div>
 
                 <div class="card">
@@ -343,65 +574,73 @@
 
             <div id="v-ent" class="view hidden">
                 <div class="card">
-                    <h3 id="titulo-entrada">Entrada de Kit</h3>
-                    <div id="aviso-edicao" class="hidden" style="background:#fff3cd; color:#856404; padding:10px; border-radius:8px; margin-bottom:15px; font-size:14px">
+                    <h3 id="titulo-entrada" class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Entrada de Kit</h3>
+                    <div id="aviso-edicao" class="hidden" style="background:#fff7e0; color:#8a5a00; padding:12px 14px; border-radius:var(--r-sm); margin-bottom:15px; font-size:13.5px; font-weight:500; border:1px solid #f5e0a3">
                         ⚠️ Você está no modo de edição. O código do kit não pode ser alterado.
                     </div>
-                    <button id="btn-scan-ent" class="btn-principal" style="margin-bottom:15px" onclick="app.scan('ent-cod', 's-ent')">📷 Escanear Código de Barras</button>
+                    <button id="btn-scan-ent" class="btn-principal" style="margin-bottom:18px" onclick="app.scan('ent-cod', 's-ent')"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/></svg> Escanear Código de Barras</button>
                     <div id="s-ent" class="scanner-view"></div>
-                    
-                    <label>Código do Kit</label><input type="text" id="ent-cod" placeholder="Digite ou escaneie">
-                    <label>Nome do Kit</label><input type="text" id="ent-nome" placeholder="Ex: Kit Cirúrgico A">
-                    
-                    <label>Protocolo</label>
-                    <select id="ent-prot">
-                        <option value="">Selecione...</option>
-                    </select>
-                    
-                    <label>Local de Armazenamento</label>
-                    <select id="ent-local">
-                        <option value="">Selecione...</option>
-                    </select>
-                    
+
+                    <div class="form-grid">
+                        <div><label>Código do Kit</label><input type="text" id="ent-cod" placeholder="Digite ou escaneie"></div>
+                        <div><label>Nome do Kit</label><input type="text" id="ent-nome" placeholder="Ex: Kit Cirúrgico A"></div>
+                        <div>
+                            <label>Protocolo</label>
+                            <select id="ent-prot">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Local de Armazenamento</label>
+                            <select id="ent-local">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <label>Data de Validade</label>
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px">
                         <input type="date" id="ent-venc" style="margin-bottom:0">
-                        <label style="margin-bottom:0; display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer; white-space:nowrap">
-                            <input type="checkbox" id="ent-sem-venc" onchange="app.toggleSemVenc(this.checked)" style="width:16px; height:16px; margin-bottom:0"> Sem Vencimento
+                        <label style="margin-bottom:0; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; text-transform:none; cursor:pointer; white-space:nowrap">
+                            <input type="checkbox" id="ent-sem-venc" onchange="app.toggleSemVenc(this.checked)" style="width:16px; height:16px; margin-bottom:0; accent-color:var(--roxo)"> Sem Vencimento
                         </label>
                     </div>
-                    
-                    <div style="display:flex; gap:10px">
+
+                    <div style="display:flex; gap:10px; margin-top:8px">
                         <button id="btn-salvar-ent" class="btn-principal" onclick="app.dbSalvar()">CONFIRMAR ENTRADA</button>
-                        <button id="btn-cancelar-edit" class="btn-principal hidden" style="background:#666" onclick="app.limparFormEntrada()">CANCELAR</button>
+                        <button id="btn-cancelar-edit" class="btn-principal hidden" style="background:#4b5065" onclick="app.limparFormEntrada()">CANCELAR</button>
                     </div>
                 </div>
             </div>
 
             <div id="v-sai" class="view hidden">
                 <div class="card">
-                    <h3>Saída de Material (Baixa)</h3>
-                    <button class="btn-principal" style="background:var(--vermelho); margin-bottom:15px" onclick="app.scan('sai-cod', 's-sai')">📷 Escanear para Baixa</button>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Saída de Material (Baixa)</h3>
+                    <button class="btn-principal" style="background:linear-gradient(135deg, var(--vermelho), #b3202d); margin-bottom:18px" onclick="app.scan('sai-cod', 's-sai')"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/></svg> Escanear para Baixa</button>
                     <div id="s-sai" class="scanner-view"></div>
-                    <label>Código do Kit</label><input type="text" id="sai-cod" placeholder="Escaneie ou digite...">
-                    <label>Motivo de Baixa</label>
-                    <select id="sai-motivo" onchange="app.validarSaida()">
-                        <option value="">Selecione...</option>
-                        <option value="Consumo">Consumo</option>
-                        <option value="Quarentena">Quarentena</option>
-                        <option value="Destruição">Destruição</option>
-                        <option value="Devolução">Devolução</option>
-                    </select>
+                    <div class="form-grid">
+                        <div><label>Código do Kit</label><input type="text" id="sai-cod" placeholder="Escaneie ou digite..."></div>
+                        <div>
+                            <label>Motivo de Baixa</label>
+                            <select id="sai-motivo" onchange="app.validarSaida()">
+                                <option value="">Selecione...</option>
+                                <option value="Consumo">Consumo</option>
+                                <option value="Quarentena">Quarentena</option>
+                                <option value="Destruição">Destruição</option>
+                                <option value="Devolução">Devolução</option>
+                            </select>
+                        </div>
+                    </div>
                     <label>Código do Paciente (Obrigatório para Consumo)</label>
                     <input type="text" id="sai-paciente" placeholder="Ex: PAC123" onkeyup="app.validarSaida()">
-                    <button id="btn-confirmar-baixa" class="btn-principal" style="background:var(--vermelho); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
+                    <button id="btn-confirmar-baixa" class="btn-principal" style="background:linear-gradient(135deg, var(--vermelho), #b3202d); margin-top:10px" onclick="app.dbRemover()">DAR BAIXA</button>
                 </div>
             </div>
 
             <div id="v-massa" class="view hidden">
                 <div class="card">
-                    <h3>Baixa em Massa (Lote)</h3>
-                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Escaneie ou digite os códigos. O motivo selecionado será aplicado a todos.</p>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>Baixa em Massa (Lote)</h3>
+                    <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 15px;">Escaneie ou digite os códigos. O motivo selecionado será aplicado a todos.</p>
                     
                     <div id="s-massa" class="scanner-view"></div>
 
@@ -415,36 +654,38 @@
 
                     <div id="massa-lista-inputs" style="margin-top: 15px;"></div>
 
-                    <button id="btn-add-massa" class="btn-add-item" onclick="app.addInputMassa()">➕ Adicionar Item</button>
+                    <button id="btn-add-massa" class="btn-add-item" onclick="app.addInputMassa()"><svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar Item</button>
 
-                    <button class="btn-principal" style="background:var(--vermelho); margin-top:20px" onclick="app.processarBaixaMassa()">CONFIRMAR BAIXA EM MASSA</button>
+                    <button class="btn-principal" style="background:linear-gradient(135deg, var(--vermelho), #b3202d); margin-top:20px" onclick="app.processarBaixaMassa()">CONFIRMAR BAIXA EM MASSA</button>
                 </div>
             </div>
 
             <div id="v-est" class="view hidden">
                 <div class="card">
-                    <h3>Estorno de Material</h3>
-                    <button class="btn-principal" style="background:#444; margin-bottom:15px" onclick="app.scan('est-cod', 's-estorno', true)">📷 Escanear para Estorno</button>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>Estorno de Material</h3>
+                    <button class="btn-principal" style="background:#4b5065; margin-bottom:18px" onclick="app.scan('est-cod', 's-estorno', true)"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/></svg> Escanear para Estorno</button>
                     <div id="s-estorno" class="scanner-view"></div>
                     <label>Código do Kit</label><input type="text" id="est-cod" placeholder="Escaneie ou digite..." onkeydown="if(event.key==='Enter') app.buscarEstorno(this.value)">
-                    <div id="dados-estorno" class="hidden" style="margin-top:20px; border-top: 1px dashed #ccc; padding-top:20px">
-                        <label>Nome do Kit</label><input type="text" id="est-nome" readonly style="background: #f9f9f9;">
-                        <label>Protocolo</label><input type="text" id="est-prot" readonly style="background: #f9f9f9;">
-                        <label>Vencimento</label><input type="text" id="est-venc" readonly style="background: #f9f9f9;">
+                    <div id="dados-estorno" class="hidden" style="margin-top:20px; border-top: 1px dashed var(--border); padding-top:20px">
+                        <div class="form-grid">
+                            <div><label>Nome do Kit</label><input type="text" id="est-nome" readonly style="background: #f7f7fa;"></div>
+                            <div><label>Protocolo</label><input type="text" id="est-prot" readonly style="background: #f7f7fa;"></div>
+                            <div><label>Vencimento</label><input type="text" id="est-venc" readonly style="background: #f7f7fa;"></div>
+                        </div>
                         <label>Motivo do Estorno</label><input type="text" id="est-motivo" placeholder="Ex: Erro de digitação">
-                        <button class="btn-principal" style="background:#444; margin-top:10px" onclick="app.dbEstornar()">CONFIRMAR ESTORNO</button>
+                        <button class="btn-principal" style="background:#4b5065; margin-top:10px" onclick="app.dbEstornar()">CONFIRMAR ESTORNO</button>
                     </div>
                 </div>
             </div>
 
             <div id="v-etiq" class="view hidden">
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                        <h3>Gerador de Etiquetas Profissional</h3>
-                        <button class="btn-principal" style="width:auto; padding:8px 15px; font-size:12px; background:#666" onclick="app.limparGeradorEtiq()">🧹 Limpar Lista</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px">
+                        <h3 class="section-title" style="margin:0"><svg class="icon" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>Gerador de Etiquetas Profissional</h3>
+                        <button class="btn-principal" style="width:auto; padding:9px 16px; font-size:12px; background:#4b5065" onclick="app.limparGeradorEtiq()"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Limpar Lista</button>
                     </div>
                     
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 100px; gap:15px; align-items: flex-end; background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 100px; gap:15px; align-items: flex-end; background: #faf9fc; padding: 18px; border-radius: var(--r-lg); margin-bottom: 20px; border: 1px solid var(--border-soft);">
                         <div>
                             <label>Nome do Kit</label>
                             <input type="text" id="etiq-nome" placeholder="Ex: Kit Coleta Sangue" style="margin-bottom:0">
@@ -459,13 +700,13 @@
                             <label>Qtd.</label>
                             <input type="number" id="etiq-qtd" value="1" min="1" max="50" style="margin-bottom:0">
                         </div>
-                        <button class="btn-principal" style="grid-column: span 3;" onclick="app.adicionarEtiquetasLote()">➕ ADICIONAR À LISTA DE IMPRESSÃO</button>
+                        <button class="btn-principal" style="grid-column: span 3;" onclick="app.adicionarEtiquetasLote()"><svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> ADICIONAR À LISTA DE IMPRESSÃO</button>
                     </div>
 
-                    <div id="resultado-etiqueta" class="hidden" style="border-top:1px solid #eee; padding-top:20px">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                    <div id="resultado-etiqueta" class="hidden" style="border-top:1px solid var(--border-soft); padding-top:20px">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px">
                             <h4 id="etiq-status">Lista de Impressão (5x4cm)</h4>
-                            <button class="btn-principal" style="width:auto; padding:10px 25px; background:var(--roxo)" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                            <button class="btn-principal" style="width:auto; padding:11px 26px; background:linear-gradient(135deg, var(--roxo), var(--roxo-escuro))" onclick="window.print()"><svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir / Salvar PDF</button>
                         </div>
                         
                         <div id="etiq-preview-list" class="etiqueta-preview-container"></div>
@@ -479,11 +720,10 @@
             <div id="v-mov" class="view hidden">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
-                        <h3>Movimentação</h3>
+                        <h3 class="section-title" style="margin:0"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M17 3h4v4"/><path d="M8 16v-4"/><path d="M12 16v-8"/><path d="M16 16v-2"/><path d="m14 9 7-7"/></svg>Movimentação</h3>
                         <div style="display:flex; gap:10px">
                             <input type="text" id="busca-mov" placeholder="Filtrar por nome..." onkeyup="app.renderMov()" style="width:180px; margin-bottom:0">
-                            <button class="btn-principal" style="width:auto; padding: 10px 15px; font-size: 14px;" onclick="app.abrirModalExport()">📊 Exportar Excel</button>
-
+                            <button class="btn-excel" onclick="app.abrirModalExport()"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar Excel</button>
                         </div>
                     </div>
                     <div id="lista-movimentacao"></div>
@@ -493,12 +733,12 @@
             <!-- Modal de Exportação -->
             <div id="modal-export" class="modal hidden">
                 <div class="modal-content">
-                    <h3>O que deseja exportar?</h3>
-                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-                        <label style="font-size: 12px; color: #666;">Período:</label>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>O que deseja exportar?</h3>
+                    <div style="margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border-soft);">
+                        <label style="font-size: 11px; color: var(--ink-soft); margin-bottom:8px;">Período:</label>
                         <div style="display: flex; gap: 10px; margin-top: 5px;">
-                            <input type="date" id="exp-inicio" style="font-size: 12px; padding: 8px;">
-                            <input type="date" id="exp-fim" style="font-size: 12px; padding: 8px;">
+                            <input type="date" id="exp-inicio" style="font-size: 12px; padding: 10px; margin-bottom:0;">
+                            <input type="date" id="exp-fim" style="font-size: 12px; padding: 10px; margin-bottom:0;">
                         </div>
                     </div>
                     <label class="export-option"><input type="checkbox" id="exp-entrada" checked> Entrada</label>
@@ -517,10 +757,9 @@
             <div id="v-rel" class="view hidden">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                        <h3>Logs do Sistema</h3>
+                        <h3 class="section-title" style="margin:0"><svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>Logs do Sistema</h3>
                         <div style="display:flex; gap:10px">
-                            <button class="btn-excel" onclick="app.exportarExcel()">📥 Exportar Excel</button>
-
+                            <button class="btn-excel" onclick="app.exportarExcel()"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar Excel</button>
                         </div>
                     </div>
                     <div id="lista-logs" style="max-height: 500px; overflow-y: auto;"></div>
@@ -529,22 +768,22 @@
 
             <div id="v-adm" class="view hidden">
                 <div class="card" id="card-novo-user" style="margin-bottom: 20px;">
-                    <h3>Novo Colaborador</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Novo Colaborador</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 16px;">
                         <div>
-                            <label style="font-size: 12px;">Nome</label>
+                            <label style="font-size: 11px;">Nome</label>
                             <input type="text" id="adm-nome" placeholder="Nome completo" style="margin-bottom: 5px;">
                         </div>
                         <div>
-                            <label style="font-size: 12px;">Login</label>
+                            <label style="font-size: 11px;">Login</label>
                             <input type="text" id="adm-login" placeholder="Ex: joao123" style="margin-bottom: 5px;">
                         </div>
                         <div>
-                            <label style="font-size: 12px;">Senha</label>
+                            <label style="font-size: 11px;">Senha</label>
                             <input type="password" id="adm-pass" placeholder="Mín. 4 dígitos" style="margin-bottom: 5px;">
                         </div>
                         <div>
-                            <label style="font-size: 12px;">Perfil</label>
+                            <label style="font-size: 11px;">Perfil</label>
                             <select id="adm-role" style="margin-bottom: 5px;">
                                 <option value="user">Usuário Comum</option>
                                 <option value="viewer">Visualizador (Apenas Dash)</option>
@@ -552,7 +791,7 @@
                             </select>
                         </div>
                         <div>
-                            <label style="font-size: 12px;">Unidade</label>
+                            <label style="font-size: 11px;">Unidade</label>
                             <select id="adm-unidade" style="margin-bottom: 5px;">
                                 <option value="RJ">RJ</option>
                                 <option value="SP">SP</option>
@@ -571,9 +810,9 @@
             <!-- Modal Exportação Estoque -->
             <div id="modal-export-estoque" class="modal hidden">
                 <div class="modal-content">
-                    <h3>Exportar Estoque</h3>
+                    <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar Estoque</h3>
                     
-                    <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--roxo);">1. ABRANGÊNCIA:</p>
+                    <p style="font-size: 11px; font-weight: 700; margin-bottom: 8px; color: var(--roxo); text-transform:uppercase; letter-spacing:.03em;">1. Abrangência:</p>
                     <label class="export-option">
                         <input type="radio" name="exp-estoque-tipo" value="filtrado" checked> 
                         Apenas o que está na tela (Filtros ativos)
@@ -583,7 +822,7 @@
                         Estoque Total (Tudo o que está cadastrado)
                     </label>
 
-                    <p style="font-size: 12px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: var(--roxo);">2. FORMATO DO RELATÓRIO:</p>
+                    <p style="font-size: 11px; font-weight: 700; margin-top: 15px; margin-bottom: 8px; color: var(--roxo); text-transform:uppercase; letter-spacing:.03em;">2. Formato do Relatório:</p>
                     <label class="export-option">
                         <input type="radio" name="exp-estoque-formato" value="detalhado" checked> 
                         Lista Detalhada (Item por item com Código)
@@ -1568,6 +1807,91 @@
                 if(active.id === 'est-motivo') app.dbEstornar();
             }
         });
+    </script>
+
+    <script>
+        /* Alternância manual de visualização Notebook / Celular.
+           Não interfere em nenhuma função ou dado do sistema — apenas
+           aplica/remove uma classe visual no <body> e lembra a escolha do usuário. */
+        window.appUI = {
+            applyMode: function (mode) {
+                document.body.classList.toggle('modo-mobile', mode === 'mobile');
+                const icon = document.getElementById('icon-view-mode');
+                const label = document.getElementById('view-mode-label');
+                if (mode === 'mobile') {
+                    if (label) label.innerText = 'Celular';
+                    if (icon) icon.innerHTML = '<rect x="7" y="2" width="10" height="20" rx="2" ry="2"/><line x1="11" y1="18" x2="13" y2="18"/>';
+                } else {
+                    if (label) label.innerText = 'Notebook';
+                    if (icon) icon.innerHTML = '<rect x="2" y="4" width="20" height="13" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>';
+                }
+            },
+            toggleViewMode: function () {
+                const isMobile = document.body.classList.contains('modo-mobile');
+                const novoModo = isMobile ? 'notebook' : 'mobile';
+                try { localStorage.setItem('ia_view_mode', novoModo); } catch (e) { /* ignora se indisponível */ }
+                this.applyMode(novoModo);
+            }
+        };
+        (function () {
+            try {
+                const salvo = localStorage.getItem('ia_view_mode');
+                if (salvo === 'mobile') appUI.applyMode('mobile');
+            } catch (e) { /* ignora se indisponível */ }
+        })();
+    </script>
+
+    <!--
+        Bloco adicional NÃO INVASIVO apenas para a interface (UI).
+        Nenhuma função original é reescrita ou alterada: aqui apenas "escutamos"
+        o momento em que as funções de renderização já existentes terminam de rodar,
+        para atualizar os novos cartões de KPI do Dashboard e o avatar do usuário.
+        Nenhuma regra de negócio, Firebase, autenticação ou lógica é modificada.
+    -->
+    <script>
+        (function () {
+            function atualizarKPIs() {
+                try {
+                    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+                    const totalKits = Object.keys((app.dados && app.dados.materiais) || {}).length;
+                    const totalProtocolos = document.querySelectorAll('#lista-protocolos .protocol-card').length;
+                    const totalVencidos = parseInt((document.getElementById('count-vencidos') || {}).innerText || '0', 10) || 0;
+                    const totalVencendo = parseInt((document.getElementById('count-vencendo') || {}).innerText || '0', 10) || 0;
+                    setTxt('kpi-total-kits', totalKits);
+                    setTxt('kpi-protocolos', totalProtocolos);
+                    setTxt('kpi-vencidos', totalVencidos);
+                    setTxt('kpi-vencendo', totalVencendo);
+                } catch (e) { /* silencioso: não afeta o restante do sistema */ }
+            }
+
+            function atualizarAvatar() {
+                try {
+                    const el = document.getElementById('user-avatar');
+                    if (el && app.user && app.user.nome) el.innerText = app.user.nome.trim().charAt(0).toUpperCase();
+                } catch (e) { /* silencioso */ }
+            }
+
+            ['checkVencimento', 'renderProtocolos', 'renderMov', 'renderEstoque'].forEach(function (fnName) {
+                const original = app[fnName];
+                if (typeof original === 'function') {
+                    app[fnName] = function () {
+                        const result = original.apply(this, arguments);
+                        atualizarKPIs();
+                        return result;
+                    };
+                }
+            });
+
+            const originalProsseguir = app.prosseguirLogin;
+            if (typeof originalProsseguir === 'function') {
+                app.prosseguirLogin = function () {
+                    const result = originalProsseguir.apply(this, arguments);
+                    atualizarAvatar();
+                    atualizarKPIs();
+                    return result;
+                };
+            }
+        })();
     </script>
 </body>
 </html>
