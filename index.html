@@ -498,8 +498,26 @@
                     </table>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 12px;">
                         <div id="controles-paginacao" class="paginacao-controles" style="margin-top: 0;"></div>
-                        <div style="background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: white; padding: 9px 18px; border-radius: 999px; font-weight: 700; font-size: 13px; box-shadow: var(--shadow-xs);">
-                            Total em Estoque: <span id="count-itens">0</span>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <button
+                                type="button"
+                                class="btn-excel"
+                                onclick="app.exportarEstoqueJSON()"
+                                title="Exportar backup completo do Firebase em arquivo JSON"
+                                style="background:linear-gradient(135deg, var(--roxo), var(--roxo-escuro));">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <path d="M8 13h2"/>
+                                    <path d="M14 13h2"/>
+                                    <path d="M8 17h2"/>
+                                    <path d="M14 17h2"/>
+                                </svg>
+                                Backup JSON
+                            </button>
+                            <div style="background: linear-gradient(135deg, var(--roxo), var(--roxo-escuro)); color: white; padding: 9px 18px; border-radius: 999px; font-weight: 700; font-size: 13px; box-shadow: var(--shadow-xs);">
+                                Total em Estoque: <span id="count-itens">0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -845,7 +863,7 @@
         </main>
 
         <footer>
-            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.5
+            &copy; Desenvolvido por Milton Rangel em 03/2026 V 1.7
         </footer>
     </div>
 
@@ -934,7 +952,22 @@
                 const u = document.getElementById('login-user').value.toLowerCase().trim();
                 const p = document.getElementById('login-pass').value.trim();
                 
-                await this.connectDB();
+                try {
+                    await this.connectDB();
+                } catch (error) {
+                    console.error('ERRO FIREBASE NO LOGIN:', error);
+                    const origem = window.location.protocol === 'file:' ? 'ARQUIVO LOCAL (file://)' : window.location.origin;
+                    alert(
+                        'Não foi possível conectar ao Firebase.\n\n' +
+                        'Origem: ' + origem + '\n' +
+                        'Código: ' + (error.code || 'sem código') + '\n' +
+                        'Mensagem: ' + (error.message || error) + '\n\n' +
+                        (window.location.protocol === 'file:'
+                            ? 'Este arquivo está sendo aberto diretamente do computador. Teste também pela página publicada no GitHub Pages (HTTPS).'
+                            : 'A página está em ambiente web. O código acima mostra exatamente o bloqueio do Firebase.')
+                    );
+                    return;
+                }
 
                 if(u === 'login americas' && p === 'itc@123@') {
                     this.user = { nome: 'MASTER', login: u, role: 'admin', ativo: true };
@@ -958,7 +991,12 @@
                         alert("Usuário ou senha incorretos.");
                     }
                 } catch (error) {
-                    alert("Erro ao conectar ao banco de dados.");
+                    console.error('ERRO AO LER USUÁRIOS:', error);
+                    alert(
+                        "Firebase conectou, mas houve erro ao ler os usuários.\n\n" +
+                        "Código: " + (error.code || "sem código") + "\n" +
+                        "Mensagem: " + (error.message || error)
+                    );
                 }
             },
 
@@ -1787,6 +1825,72 @@
                 if(ps[0]) ps[0].style.visibility = 'hidden';
                 if(labels[0]) labels[0].style.display = 'none';
                 if(labels[1]) labels[1].style.display = 'none';
+            },
+
+            async exportarEstoqueJSON() {
+                try {
+                    // Lê a RAIZ INTEIRA diretamente do Firebase.
+                    // Isso garante que o backup contenha TODOS os logs,
+                    // inclusive os que não estão carregados na tela do sistema.
+                    const snapshot = await db.ref('/').once('value');
+                    const dadosFirebase = snapshot.val() || {};
+
+                    // Estrutura padronizada do backup.
+                    // Mantém exatamente os nós utilizados pelo sistema.
+                    const backupCompleto = {
+                        logs: dadosFirebase.logs || {},
+                        materiais: dadosFirebase.materiais || {},
+                        solicitacoes: dadosFirebase.solicitacoes || {},
+                        usuarios: dadosFirebase.usuarios || {}
+                    };
+
+                    const json = JSON.stringify(backupCompleto, null, 2);
+                    const blob = new Blob(
+                        [json],
+                        { type: "application/json;charset=utf-8" }
+                    );
+
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    const agora = new Date();
+                    const dataArquivo =
+                        agora.getFullYear() + "-" +
+                        String(agora.getMonth() + 1).padStart(2, "0") + "-" +
+                        String(agora.getDate()).padStart(2, "0") + "_" +
+                        String(agora.getHours()).padStart(2, "0") + "-" +
+                        String(agora.getMinutes()).padStart(2, "0");
+
+                    a.href = url;
+                    a.download = `${this.unidade}_firebase_backup_${dataArquivo}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+                    const totais = {
+                        logs: Object.keys(backupCompleto.logs).length,
+                        materiais: Object.keys(backupCompleto.materiais).length,
+                        solicitacoes: Object.keys(backupCompleto.solicitacoes).length,
+                        usuarios: Object.keys(backupCompleto.usuarios).length
+                    };
+
+                    alert(
+                        "Backup JSON concluído com sucesso!\n\n" +
+                        `Unidade: ${this.unidade}\n` +
+                        `Logs: ${totais.logs}\n` +
+                        `Materiais: ${totais.materiais}\n` +
+                        `Solicitações: ${totais.solicitacoes}\n` +
+                        `Usuários: ${totais.usuarios}`
+                    );
+                } catch (error) {
+                    console.error("Erro ao exportar backup completo do Firebase:", error);
+                    alert(
+                        "Não foi possível gerar o backup completo.\n\n" +
+                        "Código: " + (error.code || "sem código") + "\n" +
+                        "Mensagem: " + (error.message || error)
+                    );
+                }
             },
 
             exportarExcel() {
